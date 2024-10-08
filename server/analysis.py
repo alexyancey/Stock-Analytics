@@ -23,3 +23,15 @@ def calculate_rsi(data, period=14):
     data['Avg_Gain'] = data['Gain'].rolling(window=period).mean()
     data['Avg_Loss'] = data['Loss'].rolling(window=period).mean()
     data['RSI'] = 100 - (100 / (1 + (data['Avg_Gain'] / data['Avg_Loss'])))
+
+def check_brc(data, info):
+    result = True
+    if info['resistance_past_hour'] <= 100:
+        result = False
+    return result
+
+def check_rbr(data, info):
+    return True
+
+def check_bounce_reject(data, info):
+    return True
