@@ -91,12 +91,25 @@ def analyze(ticker):
 def detect(ticker):
     info = request.json
     data = api.load_recent_data(ticker)
+
+    direction, key_level = analysis.check_brc(data, info)
+    brc = {
+        "direction": direction,
+        "key_level": key_level
+    }
+
+    direction, key_level = analysis.check_bounce_reject(data, info)
+    bounce_reject = {
+        "direction": direction,
+        "key_level": key_level
+    }
+
     result = {
-        "brc": analysis.check_brc(data, info),
+        "brc": brc,
         "rbr": analysis.check_rbr(data, info),
-        "bounce_reject": analysis.check_bounce_reject(data, info)
+        "bounce_reject": bounce_reject
     }
     return jsonify(result)
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", debug=True, threaded=True)
+    app.run(host="0.0.0.0", port=4050, debug=True, threaded=True)
