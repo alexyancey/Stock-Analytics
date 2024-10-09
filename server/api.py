@@ -10,3 +10,6 @@ def load_past_stocks(ticker, intervals_per_day=192, max_days=5):
 
 def load_recent_data(ticker):
     return yf.Ticker(ticker).history(interval="5m", period="1d")
+
+def load_current_data(ticker):
+    return yf.Ticker(ticker)

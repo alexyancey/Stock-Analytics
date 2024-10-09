@@ -35,8 +35,8 @@ def check_brc(data, info):
     candle_5_min = data.iloc[-1]['Close']
     candle_10_min = data.iloc[-2]['Close']
 
-    candle_5_min = 99
-    candle_10_min = 103
+    # candle_5_min = 99
+    # candle_10_min = 103
 
     # Return 1 -> upward brc, 0 -> no brc, -1 -> downward brc
     # Return relevant resistance/support
@@ -63,8 +63,32 @@ def check_brc(data, info):
         key_level = support_past_week
     return result, key_level
 
-def check_rbr(data, info):
-    return True
+def check_rbr(data, current):
+    candle_5_min_open = data.iloc[-1]['Open']
+    candle_5_min_close = data.iloc[-1]['Close']
+    candle_5_min_volume = data.iloc[-1]['Volume']
+
+    current_open = current.info['open']
+    current_price = current.info['currentPrice']
+    current_volume = current.info['volume']
+
+    # candle_5_min_open = 100
+    # candle_5_min_close = 101
+    # candle_5_min_volume = 20
+
+    # current_open = 101
+    # current_price = 101.05
+    # current_volume = 12
+
+    result = 0
+    if current_volume / candle_5_min_volume <= 0.75:
+        if abs(current_price - current_open) <= 0.1:
+            if candle_5_min_close - candle_5_min_open >= 0.6:
+                result = 1
+            elif candle_5_min_open - candle_5_min_close >= 0.6:
+                result = -1
+
+    return result
 
 def check_bounce_reject(data, info):
     resistance_past_hour = info['resistance_past_hour']
@@ -76,8 +100,9 @@ def check_bounce_reject(data, info):
 
     ema = info['ema']
     candle_5_min = data.iloc[-1]['Close']
-    candle_5_min = 99.5
-    threshold = 0.75
+
+    # candle_5_min = 99.5
+    # threshold = 0.75
 
     result = 0
     key_level = 0
