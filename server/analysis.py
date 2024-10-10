@@ -98,11 +98,12 @@ def check_bounce_reject(data, info):
     support_past_night = info['support_past_night']
     support_past_week = info['support_past_week']
 
-    ema = info['ema']
+    # calculate 9ema here
+    ema = data.iloc[-1]['9ema']
     candle_5_min = data.iloc[-1]['Close']
 
     # candle_5_min = 99.5
-    # threshold = 0.75
+    threshold = 0.75
 
     result = 0
     key_level = 0

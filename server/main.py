@@ -91,6 +91,7 @@ def analyze(ticker):
 def detect(ticker):
     info = request.json
     data = api.load_recent_data(ticker)
+    data['9ema'] = data['Close'].ewm(span=9, adjust=False).mean()
     current = api.load_current_data(ticker)
 
     direction, key_level = analysis.check_brc(data, info)
