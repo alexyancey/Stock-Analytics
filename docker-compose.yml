@@ -1,0 +1,14 @@
+services:
+  stonk-bot:
+    build: ./discord
+    # environment:
+    #   - DISCORD_TOKEN=your_discord_token
+    depends_on:
+      - stonk-server
+    links:
+      - stonk-server
+
+  stonk-server:
+    build: ./server
+    ports:
+      - "4050:4050"
