@@ -228,7 +228,7 @@ function formatAnalysis(ticker, analysis) {
 **RSI:** ${analysis.rsi}${rsiSummary}
 
 **Overnight Trend:** ${analysis.overnight_trend} ${analysis.overnight_trend == "Upward" ? upwardEmoji : analysis.overnight_trend == "Downward" ? downwardEmoji : ''}
-**Overall Trend:** ${analysis.trend_summary} ${analysis.trend_summary == "Upward" ? upwardEmoji : analysis.trend_summary == "Downward" ? downwardEmoji : ''}
+**Overall Trend:** ${analysis.overall_trend} ${analysis.overall_trend == "Upward" ? upwardEmoji : analysis.overall_trend == "Downward" ? downwardEmoji : ''}
 
 **Resistances:**
   * **Past Hour:** ${analysis.resistance_past_hour}
