@@ -1,7 +1,7 @@
 import yfinance as yf
 from alpha_vantage.timeseries import TimeSeries
 
-api_key = ''
+api_key = 'YRNK3VU0FHUNRFCO'
 
 def load_past_stocks(ticker, intervals_per_day=192, max_days=5):
     # Set up the timeseries with key
