@@ -65,10 +65,9 @@ async function analyze(interaction, ticker) {
         // Ask the server for the intial analysis
         const response = await axios.get(`${domain}/analyze/${ticker}`);
         // Get the channel which requested the analysis
-        // const channel = interaction.client.channels.cache.get(interaction.channelId);
+        const channel = interaction.client.channels.cache.get(interaction.channelId);
         // Send a message to the channel
-        // await channel.send(`${ticker}: ${response.data.current_price}`);
-        interaction.followUp(`${ticker}: ${response.data.current_price}`);
+        await channel.send(`${ticker}: ${response.data.current_price}`);
         // Return the analysis for potential plays
         return response.data;
     } catch(e) {
