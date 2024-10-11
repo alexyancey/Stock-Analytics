@@ -45,7 +45,8 @@ module.exports = {
             interaction.options.getString('ticker4'),
             interaction.options.getString('ticker5')
         ].filter(ticker => ticker !== null);
-        await interaction.reply(`Tracking ${tickers.join(', ')}`);
+        await interaction.deferReply();
+        interaction.editReply(`Tracking ${tickers.join(', ')}`);
     },
     track: track
 }
@@ -67,7 +68,7 @@ async function analyze(interaction, ticker) {
         // Get the channel which requested the analysis
         const channel = interaction.client.channels.cache.get(interaction.channelId);
         // Send a message to the channel
-        await channel.send(`${ticker}: ${response.data.current_price}`);
+        await channel.send(formatAnalysis(ticker, response.data));
         // Return the analysis for potential plays
         return response.data;
     } catch(e) {
@@ -85,10 +86,24 @@ async function analyze(interaction, ticker) {
  * @param {number} minutes The interval frequency in minutes, defaults to 5.
  * @returns The interval job
  */
-function createInterval(interaction, ticker, data, minutes = 5) {
+function createDetectInterval(interaction, ticker, data, minutes = 5) {
     const interval = minutes * 60 * 1000
     detect(interaction, ticker, data);
     return setInterval(() => { detect(interaction, ticker, data) }, interval);
+}
+
+/**
+ * Creates a new RBR interval for a ticker which will run until stopped
+ * 
+ * @param {Interaction} interaction The slash command interaction
+ * @param {string} ticker The stock ticker to track
+ * @param {number} minutes The interval frequency in minutes, defaults to 5.
+ * @returns The interval job
+ */
+function createDetectRbrInterval(interaction, ticker, minutes = 5) {
+    const interval = minutes * 60 * 1000
+    detectRbr(interaction, ticker);
+    return setInterval(() => { detectRbr(interaction, ticker) }, interval);
 }
 
 /**
@@ -102,6 +117,26 @@ async function detect(interaction, ticker, data) {
     try {
         // Ping the server for potential plays
         const response = await axios.post(`${domain}/detect/${ticker}`, data);
+        // Get the channel which requested the analysis
+        const channel = interaction.client.channels.cache.get(interaction.channelId);
+        // Send a message to the channel if there is a play to make
+        // TODO: Format message and conditionals
+        await channel.send(`${ticker}: ${response.data.brc.direction}`);
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+/**
+ * Run detection on potential RBR plays for a ticker
+ * 
+ * @param {Interaction} interaction The slash command interaction
+ * @param {string} ticker The stock to check potential plays on
+ */
+async function detectRbr(interaction, ticker) {
+    try {
+        // Ping the server for potential plays
+        const response = await axios.get(`${domain}/detect/rbr/${ticker}`);
         // Get the channel which requested the analysis
         const channel = interaction.client.channels.cache.get(interaction.channelId);
         // Send a message to the channel if there is a play to make
@@ -150,13 +185,12 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
             now.getTime() + (intervalMinutes - now.getMinutes() % intervalMinutes - now.getSeconds() / 60) * 60 * 1000 + offset
         );
         const delay = nextInterval - now;
-        console.log(`delay: ${delay}`);
 
         // Start the job after the calculated delay
         setTimeout(() => {
             // If jobs haven't already been stopped then proceed
             if (!areJobsStopped()) {
-                const job = createInterval(interaction, ticker, data, intervalMinutes);
+                const job = createDetectInterval(interaction, ticker, data, intervalMinutes);
                 // Add the job to the map for cancelation
                 if (!jobs.has(userId)) {
                     jobs.set(userId, []);
@@ -164,5 +198,47 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
                 jobs.get(userId).push(job);
             }
         }, delay);
+
+        // Start the RBR job after the calculated delay, one minute earlier than the next interval
+        setTimeout(() => {
+            // If jobs haven't already been stopped then proceed
+            if (!areJobsStopped()) {
+                const job = createDetectRbrInterval(interaction, ticker, intervalMinutes);
+                // Add the job to the map for cancelation
+                if (!jobs.has(userId)) {
+                    jobs.set(userId, []);
+                }
+                jobs.get(userId).push(job);
+            }
+        }, delay + (intervalMinutes - 1) * 60 * 1000);
     }
+}
+
+function formatAnalysis(ticker, analysis) {
+    const upwardEmoji = '📈';
+    const downwardEmoji = '📉';
+
+    const rsiSummary = analysis.rsi_summary != 'Netrual' ? `\n${analysis.rsi_summary}` : '';
+
+    const formatted = `📊 Analysis for **${ticker}** 📊
+
+**Current Price:** ${analysis.current_price}
+
+**MACD:** ${analysis.macd}
+**RSI:** ${analysis.rsi}${rsiSummary}
+
+**Overnight Trend:** ${analysis.overnight_trend} ${analysis.overnight_trend == "Upward" ? upwardEmoji : analysis.overnight_trend == "Downward" ? downwardEmoji : ''}
+**Overall Trend:** ${analysis.trend_summary} ${analysis.trend_summary == "Upward" ? upwardEmoji : analysis.trend_summary == "Downward" ? downwardEmoji : ''}
+
+**Resistances:**
+  * **Past Hour:** ${analysis.resistance_past_hour}
+  * **Past Night:** ${analysis.resistance_past_night}
+  * **Past Week:** ${analysis.resistance_past_week}
+
+**Supports:**
+  * **Past Hour:** ${analysis.support_past_hour}
+  * **Past Night:** ${analysis.support_past_night}
+  * **Past Week:** ${analysis.support_past_week}`;
+
+    return formatted;
 }

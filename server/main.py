@@ -57,20 +57,6 @@ def analyze(ticker):
     support_past_night, resistance_past_night = analysis.calculate_support_resistance(df, int(intervals_per_day / 2))
     support_past_week, resistance_past_week = analysis.calculate_support_resistance(df, len(df))
 
-    summary = f"""
-    Current Price: {df.iloc[-1]['close']}
-
-    MACD: {round(macd, 2)}
-    RSI: {round(rsi, 2)}
-    {rsi_summary}
-
-    Overnight trend: {overnight_trend_summary}
-    Overall trend: {trend_summary}
-
-    Resistances at {round(resistance_past_hour, 2)}, {round(resistance_past_night, 2)}, {round(resistance_past_week, 2)}
-    Supports at {round(support_past_hour, 2)}, {round(support_past_night, 2)}, {round(support_past_week, 2)}
-    """
-
     result = {
         "current_price": df.iloc[-1]['close'],
         "macd": round(macd, 2),
@@ -100,11 +86,6 @@ def detect(ticker):
         "key_level": key_level
     }
 
-    direction = analysis.check_rbr(data, current)
-    rbr = {
-        "direction": direction
-    }
-
     direction, key_level = analysis.check_bounce_reject(data, info)
     bounce_reject = {
         "direction": direction,
@@ -113,9 +94,22 @@ def detect(ticker):
 
     result = {
         "brc": brc,
-        "rbr": rbr,
         "bounce_reject": bounce_reject
     }
+    return jsonify(result)
+
+@app.route('/detect/rbr/<string:ticker>')
+def detectRbr(ticker):
+    data = api.load_recent_data(ticker)
+    data['9ema'] = data['Close'].ewm(span=9, adjust=False).mean()
+    current = api.load_current_data(ticker)
+
+    direction = analysis.check_rbr(data, current)
+    rbr = {
+        "direction": direction
+    }
+
+    result = { "rbr": rbr }
     return jsonify(result)
 
 if __name__ == '__main__':

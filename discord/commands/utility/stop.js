@@ -5,7 +5,9 @@ module.exports = {
 	data: new SlashCommandBuilder()
         .setName('stop')
         .setDescription('Stop tracking stocks'),
-    async execute(interaction) {},
+    async execute(interaction) {
+        await interaction.deferReply({ ephemeral: true });
+    },
     stop: stop
 }
 
@@ -25,6 +27,6 @@ async function stop(interaction, standalone) {
 
     // If this is from the explicit slash command, make sure to reply
     if (standalone) {
-        await interaction.reply('Stopped tracking all jobs!');
+        interaction.editReply('Stopped tracking all jobs!');
     }
 }

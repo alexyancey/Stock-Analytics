@@ -36,6 +36,8 @@ client.on('ready', () => {
 client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isChatInputCommand()) return;
 
+    const now = new Date()
+    console.log(`got command ${interaction.commandName} ${new Date().getTime() - now.getTime()}`);
 	const command = interaction.client.commands.get(interaction.commandName);
 
 	if (!command) {
@@ -44,7 +46,9 @@ client.on(Events.InteractionCreate, async interaction => {
 	}
 
 	try {
+        console.log(`command starting ${new Date().getTime() - now.getTime()}`);
 		await command.execute(interaction);
+        console.log(`command executed ${new Date().getTime() - now.getTime()}`);
 	} catch (error) {
 		console.error(error);
 		if (interaction.replied || interaction.deferred) {
@@ -64,7 +68,7 @@ client.on(Events.InteractionCreate, async interaction => {
             jobsStopped = false;
             // Make sure to stop all running jobs first
             stop(interaction, false);
-            track(interaction, areJobsStopped, 1);
+            track(interaction, areJobsStopped, 2);
             break;
         case 'stop':
             // Clear all jobs for the user
