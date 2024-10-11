@@ -11,14 +11,13 @@ app = Flask(__name__)
 @app.route('/analyze/<string:ticker>')
 def analyze(ticker):
     intervals_per_day = 192
-    max_days = 5
 
     # Load recent data
-    df = api.load_past_stocks(ticker, intervals_per_day, max_days)
+    df = api.load_past_stocks(ticker)
 
     # Calculate trends
     index = np.arange(len(df))
-    data = df['4. close'].tolist()
+    data = df['Close'].tolist()
     trend = analysis.detect_trend(index, data)
     trend_summary = 'Neutral'
     if trend > 0:
@@ -29,7 +28,7 @@ def analyze(ticker):
     overnight_len = int(intervals_per_day / 2)
     overnight = df.iloc[-overnight_len:]
     index = np.arange(len(overnight))
-    data = overnight['4. close'].tolist()
+    data = overnight['Close'].tolist()
     overnight_trend = analysis.detect_trend(index, data)
     overnight_trend_summary = 'Neutral'
     if overnight_trend > 0:
@@ -58,7 +57,7 @@ def analyze(ticker):
     support_past_week, resistance_past_week = analysis.calculate_support_resistance(df, len(df))
 
     result = {
-        "current_price": df.iloc[-1]['4. close'],
+        "current_price": df.iloc[-1]['Close'],
         "macd": round(macd, 2),
         "rsi": round(rsi, 2),
         "rsi_summary": rsi_summary,
