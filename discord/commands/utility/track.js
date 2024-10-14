@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const axios = require('axios');
 const { domain } = require('../../config.json');
 const { jobs } = require('../../utility/jobs.js');
+const { formatAnalysis, formatBrc, formatRbr, formatBounceReject } = require('../../utility/messageFormatter.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -82,7 +83,7 @@ async function analyze(interaction, ticker) {
  * 
  * @param {Interaction} interaction The slash command interaction
  * @param {string} ticker The stock ticker to track
- * @param {Object} data The analysis data for determining potential plays
+ * @param {object} data The analysis data for determining potential plays
  * @param {number} minutes The interval frequency in minutes, defaults to 5.
  * @returns The interval job
  */
@@ -111,7 +112,7 @@ function createDetectRbrInterval(interaction, ticker, minutes = 5) {
  * 
  * @param {Interaction} interaction The slash command interaction
  * @param {string} ticker The stock to check potential plays on
- * @param {Object} data 
+ * @param {object} data 
  */
 async function detect(interaction, ticker, data) {
     try {
@@ -119,9 +120,18 @@ async function detect(interaction, ticker, data) {
         const response = await axios.post(`${domain}/detect/${ticker}`, data);
         // Get the channel which requested the analysis
         const channel = interaction.client.channels.cache.get(interaction.channelId);
+
+        // Check potential plays
+        const brcMessage = formatBrc(ticker, response.data.brc);
+        const bounceRejectMessage = formatBounceReject(ticker, response.data.bounce_reject);
+
         // Send a message to the channel if there is a play to make
-        // TODO: Format message and conditionals
-        await channel.send(`${ticker}: ${response.data.brc.direction}`);
+        if (brcMessage) {
+            await channel.send(brcMessage);
+        }
+        if (bounceRejectMessage) {
+            await channel.send(bounceRejectMessage);
+        }
     } catch(e) {
         console.error(e);
     }
@@ -140,8 +150,10 @@ async function detectRbr(interaction, ticker) {
         // Get the channel which requested the analysis
         const channel = interaction.client.channels.cache.get(interaction.channelId);
         // Send a message to the channel if there is a play to make
-        // TODO: Format message and conditionals
-        await channel.send(`${ticker}: ${response.data.rbr.direction}`);
+        const rbrMessage = formatRbr(ticker, response.data.rbr);
+        if (rbrMessage) {
+            await channel.send(rbrMessage);
+        }
     } catch(e) {
         console.error(e);
     }
@@ -196,6 +208,7 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
                     jobs.set(userId, []);
                 }
                 jobs.get(userId).push(job);
+                console.log(`Job length after Standard: ${jobs.get(userId).length}`);
             }
         }, delay);
 
@@ -209,36 +222,8 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
                     jobs.set(userId, []);
                 }
                 jobs.get(userId).push(job);
+                console.log(`Job length after RBR: ${jobs.get(userId).length}`);
             }
         }, delay + (intervalMinutes - 1) * 60 * 1000);
     }
-}
-
-function formatAnalysis(ticker, analysis) {
-    const upwardEmoji = '📈';
-    const downwardEmoji = '📉';
-
-    const rsiSummary = analysis.rsi_summary != 'Netrual' ? `\n${analysis.rsi_summary}` : '';
-
-    const formatted = `📊 Analysis for **${ticker}** 📊
-
-**Current Price:** ${analysis.current_price}
-
-**MACD:** ${analysis.macd}
-**RSI:** ${analysis.rsi}${rsiSummary}
-
-**Overnight Trend:** ${analysis.overnight_trend} ${analysis.overnight_trend == "Upward" ? upwardEmoji : analysis.overnight_trend == "Downward" ? downwardEmoji : ''}
-**Overall Trend:** ${analysis.overall_trend} ${analysis.overall_trend == "Upward" ? upwardEmoji : analysis.overall_trend == "Downward" ? downwardEmoji : ''}
-
-**Resistances:**
-  * **Past Hour:** ${analysis.resistance_past_hour}
-  * **Past Night:** ${analysis.resistance_past_night}
-  * **Past Week:** ${analysis.resistance_past_week}
-
-**Supports:**
-  * **Past Hour:** ${analysis.support_past_hour}
-  * **Past Night:** ${analysis.support_past_night}
-  * **Past Week:** ${analysis.support_past_week}`;
-
-    return formatted;
 }

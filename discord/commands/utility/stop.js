@@ -19,10 +19,23 @@ module.exports = {
 async function stop(interaction, standalone) {
     // Grab user id
     const userId = interaction.user.id;
+
+    if (jobs.has(userId)) {
+        console.log(`Job length before Stop: ${jobs.get(userId).length}`);
+    } else {
+        console.log(`No more jobs: ${jobs.keys.length}`);
+    }
+
     // Delete the job from the map
     if (jobs.has(userId)) {
         jobs.get(userId).forEach(job => clearInterval(job));
         jobs.delete(userId);
+    }
+
+    if (jobs.has(userId)) {
+        console.log(`Job length after Stop: ${jobs.get(userId).length}`);
+    } else {
+        console.log(`No more jobs: ${jobs.keys.length}`);
     }
 
     // If this is from the explicit slash command, make sure to reply
