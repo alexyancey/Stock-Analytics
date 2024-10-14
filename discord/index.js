@@ -68,7 +68,7 @@ client.on(Events.InteractionCreate, async interaction => {
             jobsStopped = false;
             // Make sure to stop all running jobs first
             stop(interaction, false);
-            track(interaction, areJobsStopped, 2);
+            track(interaction, areJobsStopped, 5);
             break;
         case 'stop':
             // Clear all jobs for the user
