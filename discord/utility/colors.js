@@ -28,6 +28,9 @@ function setColor(index, ticker) {
         case 3:
             color = '#DAA520';
             break;
+        case 4:
+            color = '#DA70D6';
+            break;
         default:
             color = '#B22222';
             break;

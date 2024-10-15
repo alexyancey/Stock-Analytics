@@ -80,4 +80,8 @@ client.on(Events.InteractionCreate, async interaction => {
     };
 });
 
-client.login(token);
+try {
+    client.login(token);
+} catch (e) {
+    console.error(`Couldn't login: ${e}`);
+}

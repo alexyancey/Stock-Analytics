@@ -11,6 +11,8 @@ def analyze(ticker):
 
     # Load recent data
     df = api.load_past_stocks(ticker)
+    if df is None:
+        return jsonify({ "error": "Couldn't load past data"}), 500
 
     # Calculate trends
     index = np.arange(len(df))
@@ -73,6 +75,8 @@ def analyze(ticker):
 def detect(ticker):
     info = request.json
     data = api.load_past_stocks(ticker)
+    if data is None:
+        return jsonify({ "error": "Couldn't load past data"}), 500
     data['9ema'] = data['Close'].ewm(span=9, adjust=False).mean()
 
     direction, key_level = analysis.check_brc(data, info)
@@ -96,8 +100,12 @@ def detect(ticker):
 @app.route('/detect/rbr/<string:ticker>')
 def detectRbr(ticker):
     data = api.load_past_stocks(ticker)
+    if data is None:
+        return jsonify({ "error": "Couldn't load past data"}), 500
     data['9ema'] = data['Close'].ewm(span=9, adjust=False).mean()
     current = api.load_current_data(ticker)
+    if current is None:
+        return jsonify({ "error": "Couldn't load current data"}), 500
 
     direction = analysis.check_rbr(data, current)
     rbr = {

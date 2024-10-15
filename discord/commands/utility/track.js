@@ -91,13 +91,21 @@ async function analyze(interaction, ticker) {
  * @param {Interaction} interaction The slash command interaction
  * @param {string} ticker The stock ticker to track
  * @param {object} data The analysis data for determining potential plays
- * @param {number} minutes The interval frequency in minutes, defaults to 5.
+ * @param {number} minutes The interval frequency in minutes, defaults to 5
+ * @param {CallableFunction} areJobsStopped Callback to see if jobs should be stopped
  * @returns The interval job
  */
-function createDetectInterval(interaction, ticker, data, minutes = 5) {
-    const interval = minutes * 60 * 1000
+function createDetectInterval(interaction, ticker, data, minutes = 5, areJobsStopped) {
+    const intervalTime = minutes * 60 * 1000
     detect(interaction, ticker, data);
-    return setInterval(() => { detect(interaction, ticker, data) }, interval);
+    const interval = setInterval(() => { 
+        if (!areJobsStopped()) {
+            detect(interaction, ticker, data);
+        } else {
+            clearInterval(interval);
+        }
+    }, intervalTime);
+    return interval;
 }
 
 /**
@@ -105,13 +113,21 @@ function createDetectInterval(interaction, ticker, data, minutes = 5) {
  * 
  * @param {Interaction} interaction The slash command interaction
  * @param {string} ticker The stock ticker to track
- * @param {number} minutes The interval frequency in minutes, defaults to 5.
+ * @param {number} minutes The interval frequency in minutes, defaults to 5
+ * @param {CallableFunction} areJobsStopped Callback to see if jobs should be stopped
  * @returns The interval job
  */
-function createDetectRbrInterval(interaction, ticker, minutes = 5) {
-    const interval = minutes * 60 * 1000
+function createDetectRbrInterval(interaction, ticker, minutes = 5, areJobsStopped) {
+    const intervalTime = minutes * 60 * 1000
     detectRbr(interaction, ticker);
-    return setInterval(() => { detectRbr(interaction, ticker) }, interval);
+    const interval = setInterval(() => { 
+        if (!areJobsStopped()) {
+            detectRbr(interaction, ticker);
+        } else {
+            clearInterval(interval);
+        }
+    }, intervalTime);
+    return interval
 }
 
 /**
@@ -207,6 +223,11 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
         // Make the initial analysis
         await new Promise(resolve => setTimeout(resolve, 1000));
         const analysis = await analyze(interaction, ticker);
+        if (!analysis) {
+            console.error('Analysis was empty due to an internal error')
+            return;
+        }
+
         const data = {
             resistance_past_hour: analysis.resistance_past_hour,
             resistance_past_night: analysis.resistance_past_night,
@@ -228,7 +249,7 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
         setTimeout(() => {
             // If jobs haven't already been stopped then proceed
             if (!areJobsStopped()) {
-                const job = createDetectInterval(interaction, ticker, data, intervalMinutes);
+                const job = createDetectInterval(interaction, ticker, data, intervalMinutes, areJobsStopped);
                 // Add the job to the map for cancelation
                 if (!jobs.has(userId)) {
                     jobs.set(userId, []);
@@ -242,7 +263,7 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
         setTimeout(() => {
             // If jobs haven't already been stopped then proceed
             if (!areJobsStopped()) {
-                const job = createDetectRbrInterval(interaction, ticker, intervalMinutes);
+                const job = createDetectRbrInterval(interaction, ticker, intervalMinutes, areJobsStopped);
                 // Add the job to the map for cancelation
                 if (!jobs.has(userId)) {
                     jobs.set(userId, []);
