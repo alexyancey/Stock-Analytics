@@ -18,9 +18,7 @@ function formatAnalysis(ticker, analysis) {
 
     const rsiSummary = analysis.rsi_summary != 'Neutral' ? `\n\n❗${analysis.rsi_summary}❗` : '';
 
-    const formatted = `📊 Analysis for **${ticker}** 📊
-
-**Current Price:** ${analysis.current_price}
+    const formatted = `**Current Price:** ${analysis.current_price}
 
 **MACD:** ${analysis.macd}
 **RSI:** ${analysis.rsi}${rsiSummary}
@@ -58,10 +56,10 @@ function formatBrc(ticker, brc) {
     var message = null;
     switch (brc.direction) {
         case 1:
-            message = `❗❗Potential upward **BRC** on **${ticker}** at the ${brc.key_level} price level, look for **CALLS**❗❗`;
+            message = `Potential upward **BRC** on **${ticker}** at the ${brc.key_level} price level, look for **CALLS**`;
             break;
         case -1:
-            message = `❗❗Potential downward **BRC** on **${ticker}** at the ${brc.key_level} price level, look for **PUTS**❗❗`;
+            message = `Potential downward **BRC** on **${ticker}** at the ${brc.key_level} price level, look for **PUTS**`;
             break;
         default:
             break;
@@ -85,10 +83,10 @@ function formatRbr(ticker, rbr) {
     var message = null;
     switch (rbr.direction) {
         case 1:
-            message = `❗❗Potential upward **RBR** on **${ticker}**, look for **CALLS**❗❗`;
+            message = `Potential upward **RBR** on **${ticker}**, look for **CALLS**`;
             break;
         case -1:
-            message = `❗❗Potential downward **RBR** on **${ticker}**, look for **PUTS**❗❗`;
+            message = `Potential downward **RBR** on **${ticker}**, look for **PUTS**`;
             break;
         default:
             break;
@@ -112,10 +110,10 @@ function formatBounceReject(ticker, bounceReject) {
     var message = null;
     switch (bounceReject.direction) {
         case 1:
-            message = `❗❗Potential upward **Bounce Reject** on **${ticker}** at the ${bounceReject.key_level} price level, look for **CALLS**❗❗`;
+            message = `Potential upward **Bounce Reject** on **${ticker}** at the ${bounceReject.key_level} price level, look for **CALLS**`;
             break;
         case -1:
-            message = `❗❗Potential downward **Bounce Reject** on **${ticker}** at the ${bounceReject.key_level} price level, look for **PUTS**❗❗`;
+            message = `Potential downward **Bounce Reject** on **${ticker}** at the ${bounceReject.key_level} price level, look for **PUTS**`;
             break;
         default:
             break;

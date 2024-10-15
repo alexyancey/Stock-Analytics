@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { jobs } = require('../../utility/jobs.js');
+const { clearColors } = require('../../utility/colors.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -17,6 +18,8 @@ module.exports = {
  * @param {boolean} standalone Whether this is being run as a slash command or part of a separate one
  */
 async function stop(interaction, standalone) {
+    // Clear colors
+    clearColors();
     // Grab user id
     const userId = interaction.user.id;
 

@@ -1,8 +1,9 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 const { domain } = require('../../config.json');
 const { jobs } = require('../../utility/jobs.js');
 const { formatAnalysis, formatBrc, formatRbr, formatBounceReject } = require('../../utility/messageFormatter.js');
+const { setColor, getColor } = require('../../utility/colors.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -69,7 +70,13 @@ async function analyze(interaction, ticker) {
         // Get the channel which requested the analysis
         const channel = interaction.client.channels.cache.get(interaction.channelId);
         // Send a message to the channel
-        await channel.send(formatAnalysis(ticker, response.data));
+        const message = formatAnalysis(ticker, response.data)
+        const embed = new EmbedBuilder()
+            .setColor(getColor(ticker))
+            .setTitle(`📊 Analysis for **${ticker}** 📊`)
+            .setDescription(message)
+            .setTimestamp();
+        await channel.send({ embeds: [embed] });
         // Return the analysis for potential plays
         return response.data;
     } catch(e) {
@@ -127,10 +134,20 @@ async function detect(interaction, ticker, data) {
 
         // Send a message to the channel if there is a play to make
         if (brcMessage) {
-            await channel.send(brcMessage);
+            const brcEmbed = new EmbedBuilder()
+                .setColor(getColor(ticker))
+                .setTitle(`❗Potential play for **${ticker}**❗`)
+                .setDescription(brcMessage)
+                .setTimestamp();
+            await channel.send({ embeds: [brcEmbed] });
         }
         if (bounceRejectMessage) {
-            await channel.send(bounceRejectMessage);
+            const bounceRejectEmbed = new EmbedBuilder()
+                .setColor(getColor(ticker))
+                .setTitle(`❗Potential play for **${ticker}**❗`)
+                .setDescription(bounceRejectMessage)
+                .setTimestamp();
+            await channel.send({ embeds: [bounceRejectEmbed] });
         }
     } catch(e) {
         console.error(e);
@@ -152,7 +169,12 @@ async function detectRbr(interaction, ticker) {
         // Send a message to the channel if there is a play to make
         const rbrMessage = formatRbr(ticker, response.data.rbr);
         if (rbrMessage) {
-            await channel.send(rbrMessage);
+            const rbrEmbed = new EmbedBuilder()
+                .setColor(getColor(ticker))
+                .setTitle(`❗Potential play for **${ticker}**❗`)
+                .setDescription(rbrMessage)
+                .setTimestamp();
+            await channel.send({ embeds: [rbrEmbed] });
         }
     } catch(e) {
         console.error(e);
@@ -178,7 +200,9 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
         interaction.options.getString('ticker5')
     ].filter(ticker => ticker !== null);
 
-    for (const ticker of tickers) {
+    tickers.forEach(async (ticker, index) => {
+        // Set the color
+        setColor(index, ticker);
         // Make the initial analysis
         const analysis = await analyze(interaction, ticker);
         const data = {
@@ -225,5 +249,5 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
                 console.log(`Job length after RBR: ${jobs.get(userId).length}`);
             }
         }, delay + (intervalMinutes - 1) * 60 * 1000);
-    }
+    });
 }
