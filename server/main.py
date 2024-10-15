@@ -1,7 +1,4 @@
-import pandas as pd
-import pandas_ta as ta
 import numpy as np
-import yfinance as yf
 from flask import Flask, request, jsonify
 import analysis
 import api

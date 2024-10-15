@@ -200,10 +200,12 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
         interaction.options.getString('ticker5')
     ].filter(ticker => ticker !== null);
 
-    tickers.forEach(async (ticker, index) => {
+    for (index = 0; index < tickers.length; index++) {
+        const ticker = tickers[index];
         // Set the color
         setColor(index, ticker);
         // Make the initial analysis
+        await new Promise(resolve => setTimeout(resolve, 1000));
         const analysis = await analyze(interaction, ticker);
         const data = {
             resistance_past_hour: analysis.resistance_past_hour,
@@ -220,7 +222,7 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
         const nextInterval = new Date(
             now.getTime() + (intervalMinutes - now.getMinutes() % intervalMinutes - now.getSeconds() / 60) * 60 * 1000 + offset
         );
-        const delay = nextInterval - now;
+        const delay = (nextInterval - now) + (index * 1000);
 
         // Start the job after the calculated delay
         setTimeout(() => {
@@ -249,5 +251,5 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
                 console.log(`Job length after RBR: ${jobs.get(userId).length}`);
             }
         }, delay + (intervalMinutes - 1) * 60 * 1000);
-    });
+    };
 }

@@ -47,11 +47,9 @@ function formatAnalysis(ticker, analysis) {
  * @returns Formatted BRC message if applicable
  */
 function formatBrc(ticker, brc) {
-    console.log(brc)
-    if (!brc || !brc.direction || !brc.key_level) {
+    if (!brc && !brc.direction && !brc.key_level) {
         return null;
     }
-    console.log(brc.direction);
 
     var message = null;
     switch (brc.direction) {
@@ -76,7 +74,7 @@ function formatBrc(ticker, brc) {
  * @returns Formatted RBR message if applicable
  */
 function formatRbr(ticker, rbr) {
-    if (!rbr || !rbr.direction) {
+    if (!rbr && !rbr.direction) {
         return null;
     }
 
@@ -103,7 +101,7 @@ function formatRbr(ticker, rbr) {
  * @returns Formatted Bounce Reject message if applicable
  */
 function formatBounceReject(ticker, bounceReject) {
-    if (!bounceReject || !bounceReject.direction || !bounceReject.key_level) {
+    if (!bounceReject && !bounceReject.direction && !bounceReject.key_level) {
         return null;
     }
 

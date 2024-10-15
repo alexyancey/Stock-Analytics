@@ -1,9 +1,10 @@
+import pandas_ta as ta
 import numpy as np
 import api
 
 def calculate_support_resistance(data, window):
-    data['Support'] = data[api.get_data_type().close()].rolling(window=window).min()
-    data['Resistance'] = data[api.get_data_type().close()].rolling(window=window).max()
+    data['Support'] = data[api.get_data_type().close].rolling(window=window).min()
+    data['Resistance'] = data[api.get_data_type().close].rolling(window=window).max()
     return data['Support'].iloc[-1], data['Resistance'].iloc[-1]
 
 def detect_trend(index, data, order=1):
@@ -12,10 +13,10 @@ def detect_trend(index, data, order=1):
     return float(slope)
 
 def calculate_macd(data):
-    data.ta.macd(close=api.get_data_type().close(), fast=12, slow=26, append=True)
+    data.ta.macd(close=api.get_data_type().close, fast=12, slow=26, append=True)
 
 def calculate_rsi(data, period=14):
-    data['Change'] = data[api.get_data_type().close()].diff()
+    data['Change'] = data[api.get_data_type().close].diff()
     data['Gain'] = data['Change'].clip(lower=0)
     data['Loss'] = data['Change'].clip(upper=0).abs()
     data['Avg_Gain'] = data['Gain'].rolling(window=period).mean()
@@ -30,8 +31,8 @@ def check_brc(data, info):
     support_past_night = info['support_past_night']
     support_past_week = info['support_past_week']
 
-    candle_5_min = data.iloc[-1][api.get_data_type().close()]
-    candle_10_min = data.iloc[-2][api.get_data_type().close()]
+    candle_5_min = data.iloc[-1][api.get_data_type().close]
+    candle_10_min = data.iloc[-2][api.get_data_type().close]
 
     # Return 1 -> upward brc, 0 -> no brc, -1 -> downward brc
     # Return relevant resistance/support
@@ -59,9 +60,9 @@ def check_brc(data, info):
     return result, key_level
 
 def check_rbr(data, current):
-    candle_5_min_open = data.iloc[-1][api.get_data_type().open()]
-    candle_5_min_close = data.iloc[-1][api.get_data_type().close()]
-    candle_5_min_volume = data.iloc[-1][api.get_data_type().volume()]
+    candle_5_min_open = data.iloc[-1][api.get_data_type().open]
+    candle_5_min_close = data.iloc[-1][api.get_data_type().close]
+    candle_5_min_volume = data.iloc[-1][api.get_data_type().volume]
 
     current_open = current.info['open']
     current_price = current.info['currentPrice']
@@ -90,7 +91,7 @@ def check_bounce_reject(data, info):
 
     # calculate 9ema here
     ema = data.iloc[-1]['9ema']
-    candle_5_min = data.iloc[-1][api.get_data_type().close()]
+    candle_5_min = data.iloc[-1][api.get_data_type().close]
 
     threshold = 0.75
 
