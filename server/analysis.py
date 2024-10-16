@@ -39,8 +39,10 @@ def check_brc(data, info):
     support_past_day = info['support_past_day']
     support_past_week = info['support_past_week']
 
-    candle_5_min = data.iloc[-1][api.get_data_type().close]
-    candle_10_min = data.iloc[-2][api.get_data_type().close]
+    candle_5_min_open = data.iloc[-1][api.get_data_type().open]
+    candle_5_min_close = data.iloc[-1][api.get_data_type().close]
+    candle_10_min_open = data.iloc[-2][api.get_data_type().open]
+    candle_10_min_close = data.iloc[-2][api.get_data_type().close]
 
     candle_5_min_vol = data.iloc[-1][api.get_data_type().volume]
     candle_10_min_vol = data.iloc[-2][api.get_data_type().volume]
@@ -52,22 +54,22 @@ def check_brc(data, info):
     result = 0
     key_level = 0
     if has_valid_vol_trend:
-        if candle_10_min > resistance_past_night and candle_5_min < resistance_past_night:
+        if candle_10_min_open < resistance_past_night and candle_10_min_close > resistance_past_night and candle_5_min_open > resistance_past_night and candle_5_min_close < resistance_past_night:
             result = 1
             key_level = resistance_past_night
-        elif candle_10_min > resistance_past_day and candle_5_min < resistance_past_day:
+        elif candle_10_min_open < resistance_past_day and candle_10_min_close > resistance_past_day and candle_5_min_open > resistance_past_day and candle_5_min_close < resistance_past_day:
             result = 1
             key_level = resistance_past_day
-        elif candle_10_min > resistance_past_week and candle_5_min < resistance_past_week:
+        elif candle_10_min_open < resistance_past_week and candle_10_min_close > resistance_past_week and candle_5_min_open > resistance_past_week and candle_5_min_close < resistance_past_week:
             result = 1
             key_level = resistance_past_week
-        elif candle_10_min < support_past_night and candle_5_min > support_past_night:
+        elif candle_10_min_open > support_past_night and candle_10_min_close < support_past_night and candle_5_min_open < support_past_night and candle_5_min_close > support_past_night:
             result = -1
             key_level = support_past_night
-        elif candle_10_min < support_past_day and candle_5_min > support_past_day:
+        elif candle_10_min_open > support_past_day and candle_10_min_close < support_past_day and candle_5_min_open < support_past_day and candle_5_min_close > support_past_day:
             result = -1
             key_level = support_past_day
-        elif candle_10_min < support_past_week and candle_5_min > support_past_week:
+        elif candle_10_min_open > support_past_week and candle_10_min_close < support_past_week and candle_5_min_open < support_past_week and candle_5_min_close > support_past_week:
             result = -1
             key_level = support_past_week
     return result, key_level
@@ -87,7 +89,8 @@ def check_bounce_reject(data, info):
     support_past_day = info['support_past_day']
     support_past_week = info['support_past_week']
 
-    candle_5_min = data.iloc[-1][api.get_data_type().close]
+    candle_5_min_open = data.iloc[-1][api.get_data_type().open]
+    candle_5_min_close = data.iloc[-1][api.get_data_type().close]
     volume_trend = find_recent_volume_trend(data)
 
     threshold = 0.75
@@ -96,24 +99,24 @@ def check_bounce_reject(data, info):
     key_level = 0
 
     # Is the price close to the 9ema and is the volume decreasing recently?
-    if (extended_from_ema(data, candle_5_min) and volume_trend < 0):
+    if (extended_from_ema(data, candle_5_min_close) and volume_trend < 0):
         # Check if we are within the threshold of the key levels
-        if resistance_past_night >= candle_5_min and resistance_past_night - candle_5_min <= threshold:
+        if resistance_past_night >= candle_5_min_open and resistance_past_night >= candle_5_min_close and resistance_past_night - candle_5_min_close <= threshold:
             result = -1
             key_level = resistance_past_night
-        elif resistance_past_day >= candle_5_min and resistance_past_day - candle_5_min <= threshold:
+        elif resistance_past_day >= candle_5_min_open and resistance_past_day >= candle_5_min_close and resistance_past_day - candle_5_min_close <= threshold:
             result = -1
             key_level = resistance_past_day
-        elif resistance_past_week >= candle_5_min and resistance_past_week - candle_5_min <= threshold:
+        elif resistance_past_week >= candle_5_min_open and resistance_past_week >= candle_5_min_close and resistance_past_week - candle_5_min_close <= threshold:
             result = -1
             key_level = resistance_past_week
-        elif support_past_night <= candle_5_min and candle_5_min - support_past_night <= threshold:
+        elif support_past_night <= candle_5_min_open and support_past_night <= candle_5_min_close and candle_5_min_close - support_past_night <= threshold:
             result = 1
             key_level = support_past_night
-        elif support_past_day <= candle_5_min and candle_5_min - support_past_day <= threshold:
+        elif support_past_day <= candle_5_min_open and support_past_day <= candle_5_min_close and candle_5_min_close - support_past_day <= threshold:
             result = 1
             key_level = support_past_day
-        elif support_past_week <= candle_5_min and candle_5_min - support_past_week <= threshold:
+        elif support_past_week <= candle_5_min_open and support_past_week <= candle_5_min_close and candle_5_min_close - support_past_week <= threshold:
             result = 1
             key_level = support_past_week
 
@@ -179,7 +182,8 @@ def check_morning_star(data, current):
     current_price = current['currentPrice']
 
     vol_trend = find_recent_volume_trend(data)
-    rsi = calculate_rsi(data)
+    calculate_rsi(data)
+    rsi = data['RSI'].iloc[-1]
 
     result = 0
     if abs(current_price - current_open) <= 0.1:
@@ -204,7 +208,8 @@ def check_hammer(data, current):
     current_low = current['low']
     current_price = current['currentPrice']
 
-    rsi = calculate_rsi(data)
+    calculate_rsi(data)
+    rsi = data['RSI'].iloc[-1]
     
     result = 0
     # Look for large candle wicks
