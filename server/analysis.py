@@ -32,11 +32,11 @@ def calculate_rsi(data, period=14):
 #     - 10 min ago closes below support on increasing volume
 #     - 5 min ago closes above support on decreasing volume
 def check_brc(data, info):
-    resistance_past_hour = info['resistance_past_hour']
     resistance_past_night = info['resistance_past_night']
+    resistance_past_day = info['resistance_past_day']
     resistance_past_week = info['resistance_past_week']
-    support_past_hour = info['support_past_hour']
     support_past_night = info['support_past_night']
+    support_past_day = info['support_past_day']
     support_past_week = info['support_past_week']
 
     candle_5_min = data.iloc[-1][api.get_data_type().close]
@@ -52,21 +52,21 @@ def check_brc(data, info):
     result = 0
     key_level = 0
     if has_valid_vol_trend:
-        if candle_10_min > resistance_past_hour and candle_5_min < resistance_past_hour:
-            result = 1
-            key_level = resistance_past_hour
-        elif candle_10_min > resistance_past_night and candle_5_min < resistance_past_night:
+        if candle_10_min > resistance_past_night and candle_5_min < resistance_past_night:
             result = 1
             key_level = resistance_past_night
+        elif candle_10_min > resistance_past_day and candle_5_min < resistance_past_day:
+            result = 1
+            key_level = resistance_past_day
         elif candle_10_min > resistance_past_week and candle_5_min < resistance_past_week:
             result = 1
             key_level = resistance_past_week
-        elif candle_10_min < support_past_hour and candle_5_min > support_past_hour:
-            result = -1
-            key_level = support_past_hour
         elif candle_10_min < support_past_night and candle_5_min > support_past_night:
             result = -1
             key_level = support_past_night
+        elif candle_10_min < support_past_day and candle_5_min > support_past_day:
+            result = -1
+            key_level = support_past_day
         elif candle_10_min < support_past_week and candle_5_min > support_past_week:
             result = -1
             key_level = support_past_week
@@ -80,11 +80,11 @@ def check_brc(data, info):
 #     - Price far above 9ema
 #     - 5 min ago closes near resistance (not above) on decreasing volume
 def check_bounce_reject(data, info):
-    resistance_past_hour = info['resistance_past_hour']
     resistance_past_night = info['resistance_past_night']
+    resistance_past_day = info['resistance_past_day']
     resistance_past_week = info['resistance_past_week']
-    support_past_hour = info['support_past_hour']
     support_past_night = info['support_past_night']
+    support_past_day = info['support_past_day']
     support_past_week = info['support_past_week']
 
     candle_5_min = data.iloc[-1][api.get_data_type().close]
@@ -98,21 +98,21 @@ def check_bounce_reject(data, info):
     # Is the price close to the 9ema and is the volume decreasing recently?
     if (extended_from_ema(data, candle_5_min) and volume_trend < 0):
         # Check if we are within the threshold of the key levels
-        if resistance_past_hour >= candle_5_min and resistance_past_hour - candle_5_min <= threshold:
-            result = -1
-            key_level = resistance_past_hour
-        elif resistance_past_night >= candle_5_min and resistance_past_night - candle_5_min <= threshold:
+        if resistance_past_night >= candle_5_min and resistance_past_night - candle_5_min <= threshold:
             result = -1
             key_level = resistance_past_night
+        elif resistance_past_day >= candle_5_min and resistance_past_day - candle_5_min <= threshold:
+            result = -1
+            key_level = resistance_past_day
         elif resistance_past_week >= candle_5_min and resistance_past_week - candle_5_min <= threshold:
             result = -1
             key_level = resistance_past_week
-        elif support_past_hour <= candle_5_min and candle_5_min - support_past_hour <= threshold:
-            result = 1
-            key_level = support_past_hour
         elif support_past_night <= candle_5_min and candle_5_min - support_past_night <= threshold:
             result = 1
             key_level = support_past_night
+        elif support_past_day <= candle_5_min and candle_5_min - support_past_day <= threshold:
+            result = 1
+            key_level = support_past_day
         elif support_past_week <= candle_5_min and candle_5_min - support_past_week <= threshold:
             result = 1
             key_level = support_past_week

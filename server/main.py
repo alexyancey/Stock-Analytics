@@ -51,8 +51,8 @@ def analyze(ticker):
         rsi_summary = 'Oversold, possible upward movement'
 
     # Calculate supports/resistances
-    support_past_hour, resistance_past_hour = analysis.calculate_support_resistance(df, 12)
     support_past_night, resistance_past_night = analysis.calculate_support_resistance(df, int(intervals_per_day / 2))
+    support_past_day, resistance_past_day = analysis.calculate_support_resistance(df, intervals_per_day)
     support_past_week, resistance_past_week = analysis.calculate_support_resistance(df, len(df))
 
     result = {
@@ -62,10 +62,10 @@ def analyze(ticker):
         "rsi_summary": rsi_summary,
         "overnight_trend": overnight_trend_summary,
         "overall_trend": trend_summary,
-        "resistance_past_hour": round(resistance_past_hour, 2),
-        "support_past_hour": round(support_past_hour, 2),
         "resistance_past_night": round(resistance_past_night, 2),
         "support_past_night": round(support_past_night, 2),
+        "resistance_past_day": round(resistance_past_day, 2),
+        "support_past_day": round(support_past_day, 2),
         "resistance_past_week": round(resistance_past_week, 2),
         "support_past_week": round(support_past_week, 2)
     }

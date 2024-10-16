@@ -127,7 +127,7 @@ function createDetectInterval(interaction, ticker, data, minutes = 5, areJobsSto
  */
 function createDetectAltInterval(interaction, ticker, minutes = 5, areJobsStopped) {
     const intervalTime = minutes * 60 * 1000
-    detectRbr(interaction, ticker);
+    detectAlt(interaction, ticker);
     const interval = setInterval(() => { 
         if (!areJobsStopped()) {
             detectAlt(interaction, ticker);
@@ -209,7 +209,7 @@ async function detectAlt(interaction, ticker) {
                 .setTitle(`❗Potential play for **${ticker}**❗`)
                 .setDescription(morningStarMessage)
                 .setTimestamp();
-            await channel.send({ embeds: [rbrEmbed] });
+            await channel.send({ embeds: [morningStarEmbed] });
         }
         if (hammerMessage) {
             const hammerEmbed = new EmbedBuilder()
@@ -217,7 +217,7 @@ async function detectAlt(interaction, ticker) {
                 .setTitle(`❗Potential play for **${ticker}**❗`)
                 .setDescription(hammerMessage)
                 .setTimestamp();
-            await channel.send({ embeds: [rbrEmbed] });
+            await channel.send({ embeds: [hammerEmbed] });
         }
         if (engulfingMessage) {
             const engulfingEmbed = new EmbedBuilder()
@@ -225,7 +225,7 @@ async function detectAlt(interaction, ticker) {
                 .setTitle(`❗Potential play for **${ticker}**❗`)
                 .setDescription(engulfingMessage)
                 .setTimestamp();
-            await channel.send({ embeds: [rbrEmbed] });
+            await channel.send({ embeds: [engulfingEmbed] });
         }
     } catch(e) {
         console.error(e);
@@ -264,11 +264,11 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
         }
 
         const data = {
-            resistance_past_hour: analysis.resistance_past_hour,
             resistance_past_night: analysis.resistance_past_night,
+            resistance_past_day: analysis.resistance_past_day,
             resistance_past_week: analysis.resistance_past_week,
-            support_past_hour: analysis.support_past_hour,
             support_past_night: analysis.support_past_night,
+            support_past_day: analysis.support_past_day,
             support_past_week: analysis.support_past_week
         }
 
