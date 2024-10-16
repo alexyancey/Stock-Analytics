@@ -135,11 +135,14 @@ def check_bounce_reject(data, info):
 def check_rbr(data, current):
     candle_5_min_open = data.iloc[-1][api.get_data_type().open]
     candle_5_min_close = data.iloc[-1][api.get_data_type().close]
-    candle_5_min_volume = data.iloc[-1][api.get_data_type().volume]
+    candle_5_min_volume = int(data.iloc[-1][api.get_data_type().volume])
 
     current_open = current['open']
     current_price = current['currentPrice']
     current_volume = current['volume']
+
+    if candle_5_min_volume == 0:
+        return 0
 
     vol_trend = find_recent_volume_trend(data)
 

@@ -20,7 +20,6 @@ def load_current_data(ticker):
         current['open'] = relevant_data.iloc[0][get_data_type().open]
         current['high'] = relevant_data[get_data_type().high].max()
         current['low'] = relevant_data[get_data_type().low].min()
-        # TODO: Investigate?
         current['volume'] = relevant_data[get_data_type().volume].sum()
         current['currentPrice'] = relevant_data.iloc[-1][get_data_type().close]
 
