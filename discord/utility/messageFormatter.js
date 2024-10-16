@@ -29,13 +29,13 @@ function formatAnalysis(analysis) {
 **Overall Trend:** ${analysis.overall_trend} ${analysis.overall_trend == "Upward" ? upwardEmoji : analysis.overall_trend == "Downward" ? downwardEmoji : ''}
 
 ⬆️ **Resistances:** ⬆️
-* Past **Hour: ${analysis.resistance_past_hour}**
 * Past **Night: ${analysis.resistance_past_night}**
+* Past **Day: ${analysis.resistance_past_day}**
 * Past **Week: ${analysis.resistance_past_week}**
 
 ⬇️ **Supports:** ⬇️
-* Past **Hour: ${analysis.support_past_hour}**
 * Past **Night: ${analysis.support_past_night}**
+* Past **Day: ${analysis.support_past_day}**
 * Past **Week: ${analysis.support_past_week}**`;
 
     return formatted;

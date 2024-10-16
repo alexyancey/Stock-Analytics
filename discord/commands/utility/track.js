@@ -88,7 +88,7 @@ async function analyze(interaction, ticker) {
         // Return the analysis for potential plays
         return response.data;
     } catch(e) {
-        console.error(e);
+        console.error(`Couldn't get analyze data for ${ticker}`);
         return null;
     }
 }
@@ -174,7 +174,7 @@ async function detect(interaction, ticker, data) {
             await channel.send({ embeds: [bounceRejectEmbed] });
         }
     } catch(e) {
-        console.error(e);
+        console.error(`Couldn't get detect data for ${ticker}`);
     }
 }
 
@@ -228,7 +228,7 @@ async function detectAlt(interaction, ticker) {
             await channel.send({ embeds: [engulfingEmbed] });
         }
     } catch(e) {
-        console.error(e);
+        console.error(`Couldn't get detect alt data for ${ticker}`);
     }
 }
 

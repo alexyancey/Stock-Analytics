@@ -137,9 +137,9 @@ def check_rbr(data, current):
     candle_5_min_close = data.iloc[-1][api.get_data_type().close]
     candle_5_min_volume = data.iloc[-1][api.get_data_type().volume]
 
-    current_open = current.info['open']
-    current_price = current.info['currentPrice']
-    current_volume = current.info['volume']
+    current_open = current['open']
+    current_price = current['currentPrice']
+    current_volume = current['volume']
 
     vol_trend = find_recent_volume_trend(data)
 
@@ -172,8 +172,8 @@ def check_morning_star(data, current):
     candle_5_min_open = data.iloc[-1][api.get_data_type().open]
     candle_5_min_close = data.iloc[-1][api.get_data_type().close]
 
-    current_open = current.info['open']
-    current_price = current.info['currentPrice']
+    current_open = current['open']
+    current_price = current['currentPrice']
 
     vol_trend = find_recent_volume_trend(data)
     rsi = calculate_rsi(data)
@@ -197,9 +197,9 @@ def check_morning_star(data, current):
 #     - Current candle (4m30s) is blue and has large high/low diff and current price is near the low
 #     - Check RSI > 60
 def check_hammer(data, current):
-    current_high = current.info['high']
-    current_low = current.info['low']
-    current_price = current.info['currentPrice']
+    current_high = current['high']
+    current_low = current['low']
+    current_price = current['currentPrice']
 
     rsi = calculate_rsi(data)
     
@@ -226,9 +226,9 @@ def check_engulfing(data, current):
     candle_5_min_open = data.iloc[-1][api.get_data_type().open]
     candle_5_min_close = data.iloc[-1][api.get_data_type().close]
 
-    current_high = current.info['high']
-    current_low = current.info['low']
-    current_price = current.info['currentPrice']
+    current_high = current['high']
+    current_low = current['low']
+    current_price = current['currentPrice']
 
     result = 0
     if candle_5_min_close - candle_5_min_open >= 0.6:
@@ -253,9 +253,9 @@ def extended_from_ema(data, prev_close):
     return diff >= 1
 
 def find_recent_volume_trend(data):
-    recent_data = data.iloc[-4]
+    recent_data = data.iloc[-4:]
     index = np.arange(len(recent_data))
-    recent_data = recent_data[api.get_data_type().volume]
+    recent_data = recent_data[api.get_data_type().volume].tolist()
     trend = detect_trend(index, recent_data)
     if trend > 0:
         return 1
