@@ -1,18 +1,20 @@
 module.exports = {
     formatAnalysis: formatAnalysis,
     formatBrc: formatBrc,
+    formatBounceReject: formatBounceReject,
     formatRbr: formatRbr,
-    formatBounceReject: formatBounceReject
+    formatMorningStar: formatMorningStar,
+    formatHammer: formatHammer,
+    formatEngulfing: formatEngulfing
 };
 
 /**
  * Format the analysis string to be sent to the client
  * 
- * @param {string} ticker 
  * @param {object} analysis 
  * @returns Formatted analysis string
  */
-function formatAnalysis(ticker, analysis) {
+function formatAnalysis(analysis) {
     const upwardEmoji = '📈';
     const downwardEmoji = '📉';
 
@@ -67,33 +69,6 @@ function formatBrc(ticker, brc) {
 }
 
 /**
- * If a potential RBR is present format a message to the client
- * 
- * @param {string} ticker 
- * @param {object} rbr 
- * @returns Formatted RBR message if applicable
- */
-function formatRbr(ticker, rbr) {
-    if (!rbr && !rbr.direction) {
-        return null;
-    }
-
-    var message = null;
-    switch (rbr.direction) {
-        case 1:
-            message = `Potential upward **RBR** on **${ticker}**, look for **CALLS**`;
-            break;
-        case -1:
-            message = `Potential downward **RBR** on **${ticker}**, look for **PUTS**`;
-            break;
-        default:
-            break;
-    }
-
-    return message;
-}
-
-/**
  * If a potential Bounce Reject is present format a message to the client
  * 
  * @param {string} ticker 
@@ -112,6 +87,114 @@ function formatBounceReject(ticker, bounceReject) {
             break;
         case -1:
             message = `Potential downward **Bounce Reject** on **${ticker}** at the ${bounceReject.key_level} price level, look for **PUTS**`;
+            break;
+        default:
+            break;
+    }
+
+    return message;
+}
+
+/**
+ * If a potential RBR is present format a message to the client
+ * 
+ * @param {string} ticker 
+ * @param {object} rbr 
+ * @returns Formatted RBR message if applicable
+ */
+function formatRbr(ticker, rbr) {
+    if (!rbr) {
+        return null;
+    }
+
+    var message = null;
+    switch (rbr) {
+        case 1:
+            message = `Potential upward **RBR** on **${ticker}**, look for **CALLS**`;
+            break;
+        case -1:
+            message = `Potential downward **RBR** on **${ticker}**, look for **PUTS**`;
+            break;
+        default:
+            break;
+    }
+
+    return message;
+}
+
+/**
+ * If a potential morning star is present format a message to the client
+ * 
+ * @param {string} ticker 
+ * @param {object} morningStar 
+ * @returns Formatted morning star message if applicable
+ */
+function formatMorningStar(ticker, morningStar) {
+    if (!morningStar) {
+        return null;
+    }
+
+    var message = null;
+    switch (morningStar) {
+        case 1:
+            message = `Potential upward **Morning Star** on **${ticker}**, look for **CALLS**`;
+            break;
+        case -1:
+            message = `Potential downward **Morning Star** on **${ticker}**, look for **PUTS**`;
+            break;
+        default:
+            break;
+    }
+
+    return message;
+}
+
+/**
+ * If a potential hammer is present format a message to the client
+ * 
+ * @param {string} ticker 
+ * @param {object} hammer 
+ * @returns Formatted hammer message if applicable
+ */
+function formatHammer(ticker, hammer) {
+    if (!hammer) {
+        return null;
+    }
+
+    var message = null;
+    switch (hammer) {
+        case 1:
+            message = `Potential **Bullish Hammer** on **${ticker}**, look for **CALLS**`;
+            break;
+        case -1:
+            message = `Potential **Bearish Hammer** on **${ticker}**, look for **PUTS**`;
+            break;
+        default:
+            break;
+    }
+
+    return message;
+}
+
+/**
+ * If a potential engulfing is present format a message to the client
+ * 
+ * @param {string} ticker 
+ * @param {object} engulfing 
+ * @returns Formatted engulfing message if applicable
+ */
+function formatEngulfing(ticker, engulfing) {
+    if (!engulfing) {
+        return null;
+    }
+
+    var message = null;
+    switch (engulfing) {
+        case 1:
+            message = `Potential **Bullish Engulfing Candle** on **${ticker}**, look for **CALLS**`;
+            break;
+        case -1:
+            message = `Potential **Bearish Engulfing Candle** on **${ticker}**, look for **PUTS**`;
             break;
         default:
             break;

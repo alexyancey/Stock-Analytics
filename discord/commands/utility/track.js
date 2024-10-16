@@ -2,7 +2,15 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 const { domain } = require('../../config.json');
 const { jobs } = require('../../utility/jobs.js');
-const { formatAnalysis, formatBrc, formatRbr, formatBounceReject } = require('../../utility/messageFormatter.js');
+const { 
+    formatAnalysis,
+    formatBrc, 
+    formatBounceReject, 
+    formatRbr, 
+    formatMorningStar, 
+    formatHammer, 
+    formatEngulfing 
+} = require('../../utility/messageFormatter.js');
 const { setColor, getColor } = require('../../utility/colors.js');
 
 module.exports = {
@@ -70,7 +78,7 @@ async function analyze(interaction, ticker) {
         // Get the channel which requested the analysis
         const channel = interaction.client.channels.cache.get(interaction.channelId);
         // Send a message to the channel
-        const message = formatAnalysis(ticker, response.data)
+        const message = formatAnalysis(response.data)
         const embed = new EmbedBuilder()
             .setColor(getColor(ticker))
             .setTitle(`📊 Analysis for **${ticker}** 📊`)
@@ -109,7 +117,7 @@ function createDetectInterval(interaction, ticker, data, minutes = 5, areJobsSto
 }
 
 /**
- * Creates a new RBR interval for a ticker which will run until stopped
+ * Creates a new alt interval for a ticker which will run until stopped
  * 
  * @param {Interaction} interaction The slash command interaction
  * @param {string} ticker The stock ticker to track
@@ -117,12 +125,12 @@ function createDetectInterval(interaction, ticker, data, minutes = 5, areJobsSto
  * @param {CallableFunction} areJobsStopped Callback to see if jobs should be stopped
  * @returns The interval job
  */
-function createDetectRbrInterval(interaction, ticker, minutes = 5, areJobsStopped) {
+function createDetectAltInterval(interaction, ticker, minutes = 5, areJobsStopped) {
     const intervalTime = minutes * 60 * 1000
     detectRbr(interaction, ticker);
     const interval = setInterval(() => { 
         if (!areJobsStopped()) {
-            detectRbr(interaction, ticker);
+            detectAlt(interaction, ticker);
         } else {
             clearInterval(interval);
         }
@@ -176,19 +184,46 @@ async function detect(interaction, ticker, data) {
  * @param {Interaction} interaction The slash command interaction
  * @param {string} ticker The stock to check potential plays on
  */
-async function detectRbr(interaction, ticker) {
+async function detectAlt(interaction, ticker) {
     try {
         // Ping the server for potential plays
-        const response = await axios.get(`${domain}/detect/rbr/${ticker}`);
+        const response = await axios.get(`${domain}/detect/alt/${ticker}`);
         // Get the channel which requested the analysis
         const channel = interaction.client.channels.cache.get(interaction.channelId);
         // Send a message to the channel if there is a play to make
         const rbrMessage = formatRbr(ticker, response.data.rbr);
+        const morningStarMessage = formatMorningStar(ticker, response.data.morning_star);
+        const hammerMessage = formatHammer(ticker, response.data.hammer);
+        const engulfingMessage = formatEngulfing(ticker, response.data.engulfing);
         if (rbrMessage) {
             const rbrEmbed = new EmbedBuilder()
                 .setColor(getColor(ticker))
                 .setTitle(`❗Potential play for **${ticker}**❗`)
                 .setDescription(rbrMessage)
+                .setTimestamp();
+            await channel.send({ embeds: [rbrEmbed] });
+        }
+        if (morningStarMessage) {
+            const morningStarEmbed = new EmbedBuilder()
+                .setColor(getColor(ticker))
+                .setTitle(`❗Potential play for **${ticker}**❗`)
+                .setDescription(morningStarMessage)
+                .setTimestamp();
+            await channel.send({ embeds: [rbrEmbed] });
+        }
+        if (hammerMessage) {
+            const hammerEmbed = new EmbedBuilder()
+                .setColor(getColor(ticker))
+                .setTitle(`❗Potential play for **${ticker}**❗`)
+                .setDescription(hammerMessage)
+                .setTimestamp();
+            await channel.send({ embeds: [rbrEmbed] });
+        }
+        if (engulfingMessage) {
+            const engulfingEmbed = new EmbedBuilder()
+                .setColor(getColor(ticker))
+                .setTitle(`❗Potential play for **${ticker}**❗`)
+                .setDescription(engulfingMessage)
                 .setTimestamp();
             await channel.send({ embeds: [rbrEmbed] });
         }
@@ -259,11 +294,12 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
             }
         }, delay);
 
-        // Start the RBR job after the calculated delay, one minute earlier than the next interval
+        const offsetDelay = delay + ((intervalMinutes - 1) * 60 * 1000) + (30 * 1000)
+        // Start the alt strategy job after the calculated delay, 30 seconds earlier than the next interval
         setTimeout(() => {
             // If jobs haven't already been stopped then proceed
             if (!areJobsStopped()) {
-                const job = createDetectRbrInterval(interaction, ticker, intervalMinutes, areJobsStopped);
+                const job = createDetectAltInterval(interaction, ticker, intervalMinutes, areJobsStopped);
                 // Add the job to the map for cancelation
                 if (!jobs.has(userId)) {
                     jobs.set(userId, []);
@@ -271,6 +307,6 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
                 jobs.get(userId).push(job);
                 console.log(`Job length after RBR: ${jobs.get(userId).length}`);
             }
-        }, delay + (intervalMinutes - 1) * 60 * 1000);
+        }, offsetDelay);
     };
 }

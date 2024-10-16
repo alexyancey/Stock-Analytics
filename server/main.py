@@ -97,8 +97,8 @@ def detect(ticker):
     }
     return jsonify(result)
 
-@app.route('/detect/rbr/<string:ticker>')
-def detectRbr(ticker):
+@app.route('/detect/alt/<string:ticker>')
+def detectAlt(ticker):
     data = api.load_past_stocks(ticker)
     if data is None:
         return jsonify({ "error": "Couldn't load past data"}), 500
@@ -107,12 +107,16 @@ def detectRbr(ticker):
     if current is None:
         return jsonify({ "error": "Couldn't load current data"}), 500
 
-    direction = analysis.check_rbr(data, current)
-    rbr = {
-        "direction": direction
+    rbr = analysis.check_rbr(data, current)
+    morning_star = analysis.check_morning_star(data, current)
+    hammer = analysis.check_hammer(data, current)
+    engulfing = analysis.check_engulfing(data, current)
+    result = { 
+        "rbr": rbr,
+        "morning_star": morning_star,
+        "hammer": hammer,
+        "engulfing": engulfing
     }
-
-    result = { "rbr": rbr }
     return jsonify(result)
 
 if __name__ == '__main__':
