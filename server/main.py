@@ -16,7 +16,7 @@ def analyze(ticker):
 
     # Calculate trends
     index = np.arange(len(df))
-    data = df['Close'].tolist()
+    data = df[api.get_data_type().close].tolist()
     trend = analysis.detect_trend(index, data)
     trend_summary = 'Neutral'
     if trend > 0:
@@ -27,7 +27,7 @@ def analyze(ticker):
     overnight_len = int(intervals_per_day / 2)
     overnight = df.iloc[-overnight_len:]
     index = np.arange(len(overnight))
-    data = overnight['Close'].tolist()
+    data = overnight[api.get_data_type().close].tolist()
     overnight_trend = analysis.detect_trend(index, data)
     overnight_trend_summary = 'Neutral'
     if overnight_trend > 0:
@@ -56,7 +56,7 @@ def analyze(ticker):
     support_past_week, resistance_past_week = analysis.calculate_support_resistance(df, len(df))
 
     result = {
-        "current_price": df.iloc[-1]['Close'],
+        "current_price": df.iloc[-1][api.get_data_type().close],
         "macd": round(macd, 2),
         "rsi": round(rsi, 2),
         "rsi_summary": rsi_summary,
@@ -77,7 +77,7 @@ def detect(ticker):
     data = api.load_past_stocks(ticker)
     if data is None:
         return jsonify({ "error": "Couldn't load past data"}), 500
-    data['9ema'] = data['Close'].ewm(span=9, adjust=False).mean()
+    data['9ema'] = data[api.get_data_type().close].ewm(span=9, adjust=False).mean()
 
     direction, key_level = analysis.check_brc(data, info)
     brc = {
@@ -102,7 +102,7 @@ def detectAlt(ticker):
     data = api.load_past_stocks(ticker)
     if data is None:
         return jsonify({ "error": "Couldn't load past data"}), 500
-    data['9ema'] = data['Close'].ewm(span=9, adjust=False).mean()
+    data['9ema'] = data[api.get_data_type().close].ewm(span=9, adjust=False).mean()
     current = api.load_current_data(ticker)
     if current is None:
         return jsonify({ "error": "Couldn't load current data"}), 500
