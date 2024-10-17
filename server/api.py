@@ -3,29 +3,13 @@ import data_types
 
 def load_past_stocks(ticker):
     try:
-        # data = yf.download(tickers=ticker, interval="5m", period='5d', prepost=True)
-        data = yf.download(tickers=ticker, interval='1m', period='5d', prepost=True)
-        data_5min = data.resample('5T', label='right').agg({
-            get_data_type().open: 'first', 
-            get_data_type().high: 'max', 
-            get_data_type().low: 'min', 
-            get_data_type().close: 'last', 
-            get_data_type().volume: 'sum'
-        })
-        relevant_data = data_5min.iloc[-1]
-        current = {}
-        current['open'] = relevant_data[get_data_type().open]
-        current['high'] = relevant_data[get_data_type().high]
-        current['low'] = relevant_data[get_data_type().low]
-        current['volume'] = relevant_data[get_data_type().volume]
-        current['currentPrice'] = relevant_data[get_data_type().close]
-        data_5min = data_5min.iloc[:-1]
+        data = yf.download(tickers=ticker, interval="5m", period='5d', prepost=True)
 
     except Exception as e:
         print("An unexpected error occurred loading past data:", e)
         return None
     else:
-        return data_5min, current
+        return data
 
 # TODO: See if you can combine this with the past function and just create an aggregate "most recent" candle like you've done here
 def load_current_data(ticker):

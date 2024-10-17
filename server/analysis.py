@@ -150,6 +150,7 @@ def check_rbr(data, current):
     vol_trend = find_recent_volume_trend(data)
 
     result = 0
+    # TODO: Investigate this volume trend logic
     if current_volume / candle_5_min_volume <= 0.5 and close_to_ema(data, candle_5_min_close):
         if abs(current_price - current_open) <= 0.1:
             if candle_5_min_close - candle_5_min_open >= 0.6:
@@ -252,12 +253,12 @@ def check_engulfing(data, current):
 
 def close_to_ema(data, prev_close):
     ema = data.iloc[-1]['9ema']
-    diff = (abs(prev_close - ema) / ema) * 100
-    return diff <= 0.75
+    diff = abs(prev_close - ema)
+    return diff < 1
 
 def extended_from_ema(data, prev_close):
     ema = data.iloc[-1]['9ema']
-    diff = (abs(prev_close - ema) / ema) * 100
+    diff = abs(prev_close - ema)
     return diff >= 1
 
 def find_recent_volume_trend(data):

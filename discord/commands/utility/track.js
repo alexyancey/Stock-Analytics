@@ -294,7 +294,7 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
             }
         }, delay);
 
-        const offsetDelay = delay + ((intervalMinutes - 1) * 60 * 1000) + (30 * 1000)
+        const offsetDelay = delay + ((intervalMinutes - 1) * 60 * 1000)
         // Start the alt strategy job after the calculated delay, 30 seconds earlier than the next interval
         setTimeout(() => {
             // If jobs haven't already been stopped then proceed

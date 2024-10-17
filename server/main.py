@@ -10,7 +10,7 @@ def analyze(ticker):
     intervals_per_day = 192
 
     # Load recent data
-    df, _ = api.load_past_stocks(ticker)
+    df = api.load_past_stocks(ticker)
     if df is None:
         return jsonify({ "error": "Couldn't load past data"}), 500
 
@@ -74,7 +74,7 @@ def analyze(ticker):
 @app.route('/detect/<string:ticker>', methods=['POST'])
 def detect(ticker):
     info = request.json
-    data, _ = api.load_past_stocks(ticker)
+    data = api.load_past_stocks(ticker)
     if data is None:
         return jsonify({ "error": "Couldn't load past data"}), 500
     data['9ema'] = data['Close'].ewm(span=9, adjust=False).mean()
@@ -99,11 +99,11 @@ def detect(ticker):
 
 @app.route('/detect/alt/<string:ticker>')
 def detectAlt(ticker):
-    data, current = api.load_past_stocks(ticker)
+    data = api.load_past_stocks(ticker)
     if data is None:
         return jsonify({ "error": "Couldn't load past data"}), 500
     data['9ema'] = data['Close'].ewm(span=9, adjust=False).mean()
-    # current = api.load_current_data(ticker)
+    current = api.load_current_data(ticker)
     if current is None:
         return jsonify({ "error": "Couldn't load current data"}), 500
 
