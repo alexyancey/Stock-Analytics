@@ -36,6 +36,8 @@ client.on('ready', () => {
 client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isChatInputCommand()) return;
 
+	// if (interaction.channel.type === 'DM')
+
     const now = new Date()
     console.log(`got command ${interaction.commandName} ${new Date().getTime() - now.getTime()}`);
 	const command = interaction.client.commands.get(interaction.commandName);

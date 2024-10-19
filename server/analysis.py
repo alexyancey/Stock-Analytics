@@ -82,6 +82,7 @@ def check_brc(data, info):
 #     - Price far above 9ema
 #     - 5 min ago closes near resistance (not above) on decreasing volume
 def check_bounce_reject(data, info):
+    # TODO: Possibly use ratios on threshold instead
     resistance_past_night = info['resistance_past_night']
     resistance_past_day = info['resistance_past_day']
     resistance_past_week = info['resistance_past_week']
@@ -134,101 +135,115 @@ def check_bounce_reject(data, info):
 #     - Downtrend over past several candles
 #     - Close to 9ema
 #     - 5 min ago large blue candle
-#     - Current candle (4m30s) has small close/open and 50% volume
+#     - Current candle (4m) has small close/open and 50% volume
 def check_rbr(data, current):
     candle_5_min_open = data.iloc[-1][api.get_data_type().open]
     candle_5_min_close = data.iloc[-1][api.get_data_type().close]
     candle_5_min_volume = int(data.iloc[-1][api.get_data_type().volume])
+    candle_5_min_ema = data.iloc[-1]['9ema']
+
+    below_ema = candle_5_min_close < candle_5_min_ema
+    prev_body = abs(candle_5_min_open - candle_5_min_close)
 
     current_open = current['open']
     current_price = current['currentPrice']
     current_volume = current['volume']
+    current_body = abs(current_open - current_price)
 
     if candle_5_min_volume == 0:
         return 0
 
-    vol_trend = find_recent_volume_trend(data)
-
     result = 0
-    # TODO: Investigate this volume trend logic
     if current_volume / candle_5_min_volume <= 0.5 and close_to_ema(data, candle_5_min_close):
-        if abs(current_price - current_open) <= 0.1:
-            if candle_5_min_close - candle_5_min_open >= 0.6:
-                if vol_trend > 0:
-                    result = 1
-                else:
-                    result = -1
-            elif candle_5_min_open - candle_5_min_close >= 0.6:
-                if vol_trend > 0:
-                    result = 1
-                else:
-                    result = -1
+        if current_body <= prev_body * 0.25 and prev_body >= 0.5:
+            if below_ema:
+                result = -1
+            else:
+                result = 1
 
     return result
 
 # Morning Star
 # - Upwards
 #     - 5 min ago large blue candle
-#     - Current candle (4m30s) has small close/open on decreasing volume
+#     - Current candle (4m) has small close/open on decreasing volume
 #     - Check RSI < 40
 # - Downwards
 #     - 5 min ago large green candle
-#     - Current candle (4m30s) has small close/open on decreasing volume
+#     - Current candle (4m) has small close/open on decreasing volume
 #     - Check RSI > 60
-def check_morning_star(data, current):
+def check_morning_star(data, current, rsi):
     candle_5_min_open = data.iloc[-1][api.get_data_type().open]
     candle_5_min_close = data.iloc[-1][api.get_data_type().close]
 
     current_open = current['open']
     current_price = current['currentPrice']
 
-    vol_trend = find_recent_volume_trend(data)
-    calculate_rsi(data)
-    rsi = data['RSI'].iloc[-1]
+    # TODO: Volume trend should only account for market time
+    vol_trend = find_recent_volume_trend(data, current)
+
+    prev_bearish = candle_5_min_close < candle_5_min_open
+    prev_body = abs(candle_5_min_open - candle_5_min_close)
+    prev_large_body = prev_body >= 0.5
+
+    current_bearish = current_price < current_open
+    current_body = abs(current_open - current_price)
+    current_small_body = current_body <= (prev_body * 0.25)
 
     result = 0
-    if abs(current_price - current_open) <= 0.1:
-        if candle_5_min_close - candle_5_min_open >= 0.6:
-            if vol_trend < 0 and rsi <= 40:
-                result = 1
-        elif candle_5_min_open - candle_5_min_close >= 0.6:
-            if vol_trend > 0 and rsi >= 60:
-                result = -1
+    if prev_bearish and prev_large_body and current_bearish and current_small_body:
+        if vol_trend < 0 and rsi <= 40:
+            result = 1
+    elif prev_bearish == False and prev_large_body and current_bearish == False and current_small_body:
+        if vol_trend < 0 and rsi >= 60:
+            result = -1
 
     return result
 
 # Hammer
 # - Upwards
-#     - Current candle (4m30s) is green and has large high/low diff and current price is near the high
+#     - Current candle (4m) is green and has large high/low diff and current price is near the high
 #     - Check RSI < 40
 # - Downwards
-#     - Current candle (4m30s) is blue and has large high/low diff and current price is near the low
+#     - Current candle (4m) is blue and has large high/low diff and current price is near the low
 #     - Check RSI > 60
-def check_hammer(data, current):
+def check_hammer(current, rsi):
+    current_open = current['open']
     current_high = current['high']
     current_low = current['low']
     current_price = current['currentPrice']
 
-    calculate_rsi(data)
-    rsi = data['RSI'].iloc[-1]
-    
+    bearish = current_price < current_open
+
+    body = abs(current_price - current_open)
+    upper_shadow = current_high - current_price
+    if bearish:
+        upper_shadow = current_high - current_open
+    lower_shadow = current_open - current_low
+    if bearish:
+        lower_shadow = current_price - current_low
+
+    large_upper_shadow = upper_shadow > 2 * body
+    large_lower_shadow = lower_shadow > 2 * body
+    short_upper_shadow = upper_shadow <= body / 3
+    short_lower_shadow = lower_shadow <= body / 3
+
+    # Check for hammer conditions
     result = 0
-    # Look for large candle wicks
-    if current_high - current_low > 0.6:
-        if current_high - current_price < 0.1 and rsi <= 40:
-            result = 1
-        if current_price - current_low < 0.1 and rsi >= 60:
-            result = -1
+    if large_lower_shadow and short_upper_shadow and rsi <= 40:  
+        result = 1
+    elif large_upper_shadow and short_lower_shadow and rsi >= 60:
+        result = -1
 
     return result
 
 # Engulfing
 # - Upwards
 #     - 5 min ago candle is moderate size blue
-#     - Current candle (4m30s) is green with high/current > prev high/open and low < prev low
+#     - Current candle (4m) is green with high/current > prev high/open and low < prev low
 # - Downwards
 #     - 5 min ago candle is moderate size green
-#     - Current candle (4m30s) is blue with low/current < prev low/open and high > prev high
+#     - Current candle (4m) is blue with low/current < prev low/open and high > prev high
 def check_engulfing(data, current):
     candle_5_min_high = data.iloc[-1][api.get_data_type().high]
     candle_5_min_low = data.iloc[-1][api.get_data_type().low]
@@ -239,12 +254,14 @@ def check_engulfing(data, current):
     current_low = current['low']
     current_price = current['currentPrice']
 
+    prev_body = abs(candle_5_min_open - candle_5_min_close)
+    prev_large_body = prev_body > (abs(candle_5_min_high - candle_5_min_low) * 0.75) and prev_body >= 0.5
+
     result = 0
-    if candle_5_min_close - candle_5_min_open >= 0.6:
-        if current_high > candle_5_min_high and current_price > candle_5_min_open and current_low < candle_5_min_low:
+    if prev_large_body and current_high > candle_5_min_high and current_low < candle_5_min_low:
+        if current_price > candle_5_min_open:
             result = 1
-    elif candle_5_min_open - candle_5_min_close >= 0.6:
-        if current_low < candle_5_min_low and current_price < candle_5_min_open and current_high > candle_5_min_high:
+        elif current_price < candle_5_min_open:
             result = -1
 
     return result
@@ -261,14 +278,25 @@ def extended_from_ema(data, prev_close):
     diff = abs(prev_close - ema)
     return diff >= 1
 
-def find_recent_volume_trend(data):
-    recent_data = data.iloc[-4:]
-    index = np.arange(len(recent_data))
-    recent_data = recent_data[api.get_data_type().volume].tolist()
-    trend = detect_trend(index, recent_data)
-    if trend > 0:
-        return 1
-    elif trend < 0:
-        return -1
+def find_recent_volume_trend(data, current=None):
+    length = min(4, len(data))
+
+    if length == 1 and current != None:
+        prev_vol = data.iloc[-1][api.get_data_type().volume]
+        if prev_vol < current['volume']:
+            return 1
+        elif prev_vol > current['volume']:
+            return -1
+        else:
+            return 0
     else:
-        return 0
+        recent_data = data.iloc[-length:]
+        index = np.arange(len(recent_data))
+        recent_data = recent_data[api.get_data_type().volume].tolist()
+        trend = detect_trend(index, recent_data)
+        if trend > 0:
+            return 1
+        elif trend < 0:
+            return -1
+        else:
+            return 0

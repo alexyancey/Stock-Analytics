@@ -158,7 +158,7 @@ def test_upward_rbr():
     data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=200)
     data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=300)
     data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=400)
-    data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=500, ema=119)
+    data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=500, ema=118.5)
     current = {
         'open': 119,
         'currentPrice': 119.05,
@@ -167,30 +167,73 @@ def test_upward_rbr():
     result = analysis.check_rbr(data, current)
     assert result == 1
 
-# def test_upward_rbr_with_vol_downtrend():
-#     data = pd.DataFrame(columns=cols)
-#     data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=500)
-#     data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=400)
-#     data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=300)
-#     data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=200, ema=119)
-#     current = {
-#         'open': 119,
-#         'currentPrice': 119.05,
-#         'volume': 90
-#     }
-#     result = analysis.check_rbr(data, current)
-#     assert result == -1
+def test_downward_rbr():
+    data = pd.DataFrame(columns=cols)
+    data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=200)
+    data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=300)
+    data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=400)
+    data.loc[len(data)] = entry(open=115, close=110, high=119, low=115, volume=500, ema=110.3)
+    current = {
+        'open': 110,
+        'currentPrice': 110.05,
+        'volume': 200
+    }
+    result = analysis.check_rbr(data, current)
+    assert result == -1
 
-# def test_upward_rbr():
-#     data = pd.DataFrame(columns=cols)
-#     data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=200)
-#     data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=300)
-#     data.loc[len(data)] = entry(open=115, close=119, high=119, low=115, volume=400)
-#     data.loc[len(data)] = entry(open=115, close=110, high=119, low=115, volume=500, ema=109.1)
-#     current = {
-#         'open': 110,
-#         'currentPrice': 110.05,
-#         'volume': 200
-#     }
-#     result = analysis.check_rbr(data, current)
-#     assert result == -1
+# ------------------------------------------
+# Morning Star
+# ------------------------------------------
+
+def test_morning_star():
+    data = pd.DataFrame(columns=cols)
+    data.loc[len(data)] = entry(open=157.41, close=155.86, high=158, low=155.57, volume=1900000)
+    data.loc[len(data)] = entry(open=157.41, close=155.86, high=158, low=155.57, volume=1800000)
+    data.loc[len(data)] = entry(open=157.41, close=155.86, high=158, low=155.57, volume=1700000)
+    data.loc[len(data)] = entry(open=157.41, close=155.86, high=158, low=155.57, volume=1700000)
+    current = {
+        'open': 155.85,
+        'currentPrice': 155.8,
+        'volume': 500000
+    }
+    result = analysis.check_morning_star(data, current, rsi=30)
+    assert result == 1
+
+def test_evening_star():
+    data = pd.DataFrame(columns=cols)
+    data.loc[len(data)] = entry(open=155.82, close=156.76, high=158, low=155.57, volume=1700000)
+    current = {
+        'open': 156.76,
+        'currentPrice': 156.83,
+        'volume': 500000
+    }
+    result = analysis.check_morning_star(data, current, rsi=70)
+    assert result == -1
+
+# ------------------------------------------
+# Hammer
+# ------------------------------------------
+
+def test_bullish_hammer():
+    current = {
+        'open': 220.47,
+        'high': 220.44,
+        'low': 220.04,
+        'currentPrice': 220.34
+    }
+    result = analysis.check_hammer(current, 30)
+    assert result == 1
+
+def test_bearish_hammer():
+    current = {
+        'open': 244.65,
+        'high': 245.14,
+        'low': 244.63,
+        'currentPrice': 244.76
+    }
+    result = analysis.check_hammer(current, 70)
+    assert result == -1
+
+# ------------------------------------------
+# Engulfing
+# ------------------------------------------

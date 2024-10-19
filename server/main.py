@@ -107,9 +107,13 @@ def detectAlt(ticker):
     if current is None:
         return jsonify({ "error": "Couldn't load current data"}), 500
 
+    
+    analysis.calculate_rsi(data)
+    rsi = data['RSI'].iloc[-1]
+
     rbr = analysis.check_rbr(data, current)
-    morning_star = analysis.check_morning_star(data, current)
-    hammer = analysis.check_hammer(data, current)
+    morning_star = analysis.check_morning_star(data, current, rsi)
+    hammer = analysis.check_hammer(current, rsi)
     engulfing = analysis.check_engulfing(data, current)
     result = { 
         "rbr": rbr,

@@ -278,7 +278,7 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
         const nextInterval = new Date(
             now.getTime() + (intervalMinutes - now.getMinutes() % intervalMinutes - now.getSeconds() / 60) * 60 * 1000 + offset
         );
-        const delay = (nextInterval - now) + (index * 1000);
+        const delay = (nextInterval - now) + (index * 2000);
 
         // Start the job after the calculated delay
         setTimeout(() => {

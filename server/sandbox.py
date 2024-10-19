@@ -8,8 +8,8 @@ import analysis
 # last = data.iloc[-1]['close']
 # print(last)
 
-df = api.load_past_stocks('TSLA')
-current = api.load_current_data('TSLA')
+df = api.load_past_stocks('TSLA', True)
+# current = api.load_current_data('TSLA')
 print(df)
 
 # info = {

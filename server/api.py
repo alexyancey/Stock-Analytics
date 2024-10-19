@@ -1,9 +1,16 @@
 import yfinance as yf
 import data_types
+import pandas as pd
+import datetime
 
-def load_past_stocks(ticker):
+def load_past_stocks(ticker, trim=False):
     try:
         data = yf.download(tickers=ticker, interval="5m", period='5d', prepost=True)
+        if trim:
+            today = pd.to_datetime(datetime.date.today(), format='%Y-%m-%d')
+            data['date'] = pd.to_datetime(data.index.date, format='%Y-%m-%d')
+            data = data.between_time('09:30:00', '15:55:00')
+            data = data[data['date'] == today]
 
     except Exception as e:
         print("An unexpected error occurred loading past data:", e)
@@ -11,11 +18,10 @@ def load_past_stocks(ticker):
     else:
         return data
 
-# TODO: See if you can combine this with the past function and just create an aggregate "most recent" candle like you've done here
 def load_current_data(ticker):
     try:
         data = yf.download(tickers=ticker, interval="1m", period='1d', prepost=True)
-        # Get data from past 4 minutes since we check every 4m30s
+        # Get data from past 4 minutes since we check every 4m
         relevant_data = data.iloc[-4:]
         current = {}
         current['open'] = relevant_data.iloc[0][get_data_type().open]
