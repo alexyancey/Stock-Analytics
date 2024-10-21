@@ -1,7 +1,14 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 const { domain } = require('../../config.json');
-const { jobs } = require('../../utility/jobs.js');
+const { 
+    addUserTicker,
+    isJobQueued, 
+    isJobAltQueued,
+    addDetectJob, 
+    addDetectAltJob,
+    sendMessage 
+} = require('../../utility/jobs.js');
 const { 
     formatAnalysis,
     formatBrc, 
@@ -100,18 +107,13 @@ async function analyze(interaction, ticker) {
  * @param {string} ticker The stock ticker to track
  * @param {object} data The analysis data for determining potential plays
  * @param {number} minutes The interval frequency in minutes, defaults to 5
- * @param {CallableFunction} areJobsStopped Callback to see if jobs should be stopped
  * @returns The interval job
  */
-function createDetectInterval(interaction, ticker, data, minutes = 5, areJobsStopped) {
+function createDetectInterval(interaction, ticker, data, minutes = 5) {
     const intervalTime = minutes * 60 * 1000
     detect(interaction, ticker, data);
     const interval = setInterval(() => { 
-        if (!areJobsStopped()) {
-            detect(interaction, ticker, data);
-        } else {
-            clearInterval(interval);
-        }
+        detect(interaction, ticker, data);
     }, intervalTime);
     return interval;
 }
@@ -122,18 +124,13 @@ function createDetectInterval(interaction, ticker, data, minutes = 5, areJobsSto
  * @param {Interaction} interaction The slash command interaction
  * @param {string} ticker The stock ticker to track
  * @param {number} minutes The interval frequency in minutes, defaults to 5
- * @param {CallableFunction} areJobsStopped Callback to see if jobs should be stopped
  * @returns The interval job
  */
-function createDetectAltInterval(interaction, ticker, minutes = 5, areJobsStopped) {
+function createDetectAltInterval(interaction, ticker, minutes = 5) {
     const intervalTime = minutes * 60 * 1000
     detectAlt(interaction, ticker);
     const interval = setInterval(() => { 
-        if (!areJobsStopped()) {
-            detectAlt(interaction, ticker);
-        } else {
-            clearInterval(interval);
-        }
+        detectAlt(interaction, ticker);
     }, intervalTime);
     return interval
 }
@@ -163,7 +160,7 @@ async function detect(interaction, ticker, data) {
                 .setTitle(`❗Potential play for **${ticker}**❗`)
                 .setDescription(brcMessage)
                 .setTimestamp();
-            await channel.send({ embeds: [brcEmbed] });
+            sendMessage(ticker, brcEmbed);
         }
         if (bounceRejectMessage) {
             const bounceRejectEmbed = new EmbedBuilder()
@@ -171,7 +168,7 @@ async function detect(interaction, ticker, data) {
                 .setTitle(`❗Potential play for **${ticker}**❗`)
                 .setDescription(bounceRejectMessage)
                 .setTimestamp();
-            await channel.send({ embeds: [bounceRejectEmbed] });
+            sendMessage(ticker, bounceRejectEmbed);
         }
     } catch(e) {
         console.error(`Couldn't get detect data for ${ticker}`);
@@ -201,7 +198,7 @@ async function detectAlt(interaction, ticker) {
                 .setTitle(`❗Potential play for **${ticker}**❗`)
                 .setDescription(rbrMessage)
                 .setTimestamp();
-            await channel.send({ embeds: [rbrEmbed] });
+            sendMessage(ticker, rbrEmbed);
         }
         if (morningStarMessage) {
             const morningStarEmbed = new EmbedBuilder()
@@ -209,7 +206,7 @@ async function detectAlt(interaction, ticker) {
                 .setTitle(`❗Potential play for **${ticker}**❗`)
                 .setDescription(morningStarMessage)
                 .setTimestamp();
-            await channel.send({ embeds: [morningStarEmbed] });
+            sendMessage(ticker, morningStarEmbed);
         }
         if (hammerMessage) {
             const hammerEmbed = new EmbedBuilder()
@@ -217,7 +214,7 @@ async function detectAlt(interaction, ticker) {
                 .setTitle(`❗Potential play for **${ticker}**❗`)
                 .setDescription(hammerMessage)
                 .setTimestamp();
-            await channel.send({ embeds: [hammerEmbed] });
+            sendMessage(ticker, hammerEmbed);
         }
         if (engulfingMessage) {
             const engulfingEmbed = new EmbedBuilder()
@@ -225,7 +222,7 @@ async function detectAlt(interaction, ticker) {
                 .setTitle(`❗Potential play for **${ticker}**❗`)
                 .setDescription(engulfingMessage)
                 .setTimestamp();
-            await channel.send({ embeds: [engulfingEmbed] });
+            sendMessage(engulfingEmbed);
         }
     } catch(e) {
         console.error(`Couldn't get detect alt data for ${ticker}`);
@@ -236,12 +233,12 @@ async function detectAlt(interaction, ticker) {
  * Track specific stocks for potential plays
  * 
  * @param {Interaction} interaction The slash command interaction
- * @param {CallableFunction} areJobsStopped Callback to see if jobs have been stopped
  * @param {number} intervalMinutes The interval (on the hour) to run jobs
  */
-async function track(interaction, areJobsStopped, intervalMinutes = 5) {
-    // Grab user id
+async function track(interaction, intervalMinutes = 5) {
+    // Grab user id and channel
     const userId = interaction.user.id;
+    const channel = interaction.client.channels.cache.get(interaction.channelId);
     // Grab all the input tickers, only one is required
     const tickers = [
         interaction.options.getString('ticker1'),
@@ -273,40 +270,38 @@ async function track(interaction, areJobsStopped, intervalMinutes = 5) {
         }
 
         // Calculate the time until the next interval for starting the jobs
+        // TODO: Remove offset logic after switching to AlphaVantage
         const offset = 1000;
         const now = new Date();
         const nextInterval = new Date(
             now.getTime() + (intervalMinutes - now.getMinutes() % intervalMinutes - now.getSeconds() / 60) * 60 * 1000 + offset
         );
-        const delay = (nextInterval - now) + (index * 2000);
+        const delay = (nextInterval - now) + (index * 1500);
 
         // Start the job after the calculated delay
         setTimeout(() => {
             // If jobs haven't already been stopped then proceed
-            if (!areJobsStopped()) {
-                const job = createDetectInterval(interaction, ticker, data, intervalMinutes, areJobsStopped);
-                // Add the job to the map for cancelation
-                if (!jobs.has(userId)) {
-                    jobs.set(userId, []);
-                }
-                jobs.get(userId).push(job);
-                console.log(`Job length after Standard: ${jobs.get(userId).length}`);
+            if (isJobQueued(ticker)) {
+                const job = createDetectInterval(interaction, ticker, data, intervalMinutes);
+                addDetectJob(ticker, job);
+            } else {
+                console.log(`Detect job for ${ticker} removed from queue, not proceeding`);
             }
         }, delay);
 
-        const offsetDelay = delay + ((intervalMinutes - 1) * 60 * 1000)
+        const offsetDelay = delay + ((intervalMinutes - 1) * 60 * 1000) + (30 * 1000);
         // Start the alt strategy job after the calculated delay, 30 seconds earlier than the next interval
         setTimeout(() => {
             // If jobs haven't already been stopped then proceed
-            if (!areJobsStopped()) {
-                const job = createDetectAltInterval(interaction, ticker, intervalMinutes, areJobsStopped);
-                // Add the job to the map for cancelation
-                if (!jobs.has(userId)) {
-                    jobs.set(userId, []);
-                }
-                jobs.get(userId).push(job);
-                console.log(`Job length after RBR: ${jobs.get(userId).length}`);
+            if (isJobAltQueued(ticker)) {
+                const job = createDetectAltInterval(interaction, ticker, intervalMinutes);
+                addDetectAltJob(ticker, job);
+            } else {
+                console.log(`Detect alt job for ${ticker} removed from queue, not proceeding`);
             }
         }, offsetDelay);
+
+        // Add user tracked ticker
+        addUserTicker(ticker, userId, channel);
     };
 }

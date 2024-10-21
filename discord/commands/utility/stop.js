@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { jobs } = require('../../utility/jobs.js');
+const { removeJob } = require('../../utility/jobs.js');
 const { clearColors } = require('../../utility/colors.js');
 
 module.exports = {
@@ -23,23 +23,8 @@ async function stop(interaction, standalone) {
     // Grab user id
     const userId = interaction.user.id;
 
-    if (jobs.has(userId)) {
-        console.log(`Job length before Stop: ${jobs.get(userId).length}`);
-    } else {
-        console.log(`No more jobs: ${jobs.keys.length}`);
-    }
-
     // Delete the job from the map
-    if (jobs.has(userId)) {
-        jobs.get(userId).forEach(job => clearInterval(job));
-        jobs.delete(userId);
-    }
-
-    if (jobs.has(userId)) {
-        console.log(`Job length after Stop: ${jobs.get(userId).length}`);
-    } else {
-        console.log(`No more jobs: ${jobs.keys.length}`);
-    }
+    removeJob(userId);
 
     // If this is from the explicit slash command, make sure to reply
     if (standalone) {
