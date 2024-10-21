@@ -146,8 +146,6 @@ async function detect(interaction, ticker, data) {
     try {
         // Ping the server for potential plays
         const response = await axios.post(`${domain}/detect/${ticker}`, data);
-        // Get the channel which requested the analysis
-        const channel = interaction.client.channels.cache.get(interaction.channelId);
 
         // Check potential plays
         const brcMessage = formatBrc(ticker, response.data.brc);
@@ -185,8 +183,6 @@ async function detectAlt(interaction, ticker) {
     try {
         // Ping the server for potential plays
         const response = await axios.get(`${domain}/detect/alt/${ticker}`);
-        // Get the channel which requested the analysis
-        const channel = interaction.client.channels.cache.get(interaction.channelId);
         // Send a message to the channel if there is a play to make
         const rbrMessage = formatRbr(ticker, response.data.rbr);
         const morningStarMessage = formatMorningStar(ticker, response.data.morning_star);
