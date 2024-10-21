@@ -60,21 +60,11 @@ client.on(Events.InteractionCreate, async interaction => {
 		}
 	}
 
-    var jobsStopped = false;
-    const areJobsStopped = () => {
-        return jobsStopped;
-    };
     switch (interaction.commandName) {
         case 'track':
-            // Jobs are about to start
-            jobsStopped = false;
-            // Make sure to stop all running jobs first
-            stop(interaction, false);
             track(interaction, areJobsStopped, 5);
             break;
         case 'stop':
-            // Clear all jobs for the user
-            jobsStopped = true;
             stop(interaction, true);
             break;
         default:
