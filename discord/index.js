@@ -62,7 +62,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
     switch (interaction.commandName) {
         case 'track':
-            track(interaction, areJobsStopped, 5);
+            track(interaction, 5);
             break;
         case 'stop':
             stop(interaction, true);

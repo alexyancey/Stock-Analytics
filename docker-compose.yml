@@ -10,5 +10,7 @@ services:
 
   stonk-server:
     build: ./server
+    environment:
+      - TZ=America/Chicago
     ports:
       - "4050:4050"
