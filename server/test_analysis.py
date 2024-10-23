@@ -237,3 +237,23 @@ def test_bearish_hammer():
 # ------------------------------------------
 # Engulfing
 # ------------------------------------------
+
+def test_bullish_engulfing():
+    data = pd.DataFrame(columns=cols)
+    data.loc[len(data)] = entry(open=217.31, close=217.09, high=217.33, low=217, volume=1700000)
+    current = {
+        'open': 217.09,
+        'currentPrice': 217.35
+    }
+    result = analysis.check_engulfing(data, current)
+    assert result == 1
+
+def test_bearish_engulfing():
+    data = pd.DataFrame(columns=cols)
+    data.loc[len(data)] = entry(open=191.14, close=191.44, high=191.52, low=191.11, volume=1700000)
+    current = {
+        'open': 191.43,
+        'currentPrice': 191.08
+    }
+    result = analysis.check_engulfing(data, current)
+    assert result == -1

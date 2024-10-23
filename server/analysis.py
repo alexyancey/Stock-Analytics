@@ -250,18 +250,19 @@ def check_engulfing(data, current):
     candle_5_min_open = data.iloc[-1][api.get_data_type().open]
     candle_5_min_close = data.iloc[-1][api.get_data_type().close]
 
-    current_high = current['high']
-    current_low = current['low']
+    current_open = current['open']
     current_price = current['currentPrice']
+    current_bearish = current_price < current_open
 
+    prev_bearish = candle_5_min_open > candle_5_min_close
     prev_body = abs(candle_5_min_open - candle_5_min_close)
-    prev_large_body = prev_body > (abs(candle_5_min_high - candle_5_min_low) * 0.75) and prev_body >= 0.5
+    prev_large_body = prev_body > (abs(candle_5_min_high - candle_5_min_low) * 0.5) and prev_body >= 0.2
 
     result = 0
-    if prev_large_body and current_high > candle_5_min_high and current_low < candle_5_min_low:
-        if current_price > candle_5_min_open:
+    if prev_large_body:
+        if prev_bearish and current_bearish == False and current_price > candle_5_min_open:
             result = 1
-        elif current_price < candle_5_min_open:
+        if prev_bearish == False and current_bearish and current_price < candle_5_min_open:
             result = -1
 
     return result
